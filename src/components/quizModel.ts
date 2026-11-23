@@ -19,9 +19,12 @@ export type Kind = Task['kind']
 export type Answer = (number | string)[]
 export type Grade = { ok: boolean; parts: boolean[] }
 
-/** English next to the German source for chapters 0 and 1. Chapters 2–5 are in locales/en-chapters.ts. */
+/** English next to the German source, registered with e(de, en). Older slides keep theirs in locales/en.ts and en-chapters.ts. */
 export const QUIZ_EN: Record<string, string> = {}
-export const e = (de: string, en: string) => { QUIZ_EN[de] = en; return de }
+// e() inside a component runs at render time, after i18n has copied QUIZ_EN: i18n.ts hands in a late registrar for those.
+let late: ((de: string, en: string) => void) | undefined
+export const onLateEnglish = (f: (de: string, en: string) => void) => { late = f }
+export const e = (de: string, en: string) => { if (QUIZ_EN[de] !== en) { QUIZ_EN[de] = en; late?.(de, en) } return de }
 
 export const choice = (q: string, options: string[], answer: number | number[], why: string): Task => ({ kind: 'choice', q, options, answer: [answer].flat(), why })
 export const gaps = (q: string, text: string, why: string, file?: string): Task => ({ kind: 'gaps', q, text, file, why })

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { quizAttempt } from './me.ts'
 import { useTranslation } from 'react-i18next'
-import { chapters, type Chapter } from '../content.ts'
+import { entryOf, findEntry, nextOf, path, quizHref, type Chapter } from '../content.ts'
+import { Depth } from './Pages.tsx'
 import { QUIZZES } from '../quizzes.ts'
 import { blanks, grade, initial, moved, solution, splitGaps, type Answer, type Grade, type Kind, type Task } from './quizModel.ts'
 import { Stack } from './Stack.tsx'
@@ -130,7 +132,7 @@ function Body({ task, b }: { task: Task; b: Ctl }) {
   }
 }
 
-function TaskCard({ task, n, onSolved }: { task: Task; n: number; onSolved: () => void }) {
+function TaskCard({ task, n, record, onSolved }: { task: Task; n: number; record: (task: number, ok: boolean) => void; onSolved: () => void }) {
   const { t } = useTranslation()
   const [answer, setAnswer] = useState(() => initial(task, t))
   const [result, setResult] = useState<Grade | null>(null)
@@ -138,7 +140,7 @@ function TaskCard({ task, n, onSolved }: { task: Task; n: number; onSolved: () =
   const solved = !!result?.ok
   const locked = solved || shown
   const change = (f: (a: Answer) => Answer) => { if (!locked) { setAnswer(f); setResult(null) } }
-  const check = () => { const g = grade(task, answer, t); setResult(g); if (g.ok) onSolved() }
+  const check = () => { const g = grade(task, answer, t); setResult(g); record(n - 1, g.ok); if (g.ok) onSolved() }
   const reveal = () => { setAnswer(solution(task, t)); setResult(null); setShown(true) }
   const empty = (task.kind === 'choice' || task.kind === 'bugs') && !answer.length
   const note: ReactNode = task.kind === 'choice' && task.answer.length > 1 ? t('Several answers are correct.') : task.kind === 'bugs' ? t('Lines to mark: {{n}}', { n: task.bad.length }) : task.kind === 'order' ? t('Drag the elements or use the arrows.') : null
@@ -162,23 +164,26 @@ function TaskCard({ task, n, onSolved }: { task: Task; n: number; onSolved: () =
 
 function ChapterQuiz({ chapter }: { chapter: Chapter }) {
   const { t } = useTranslation()
-  const tasks = QUIZZES[chapter.id], i = chapters.indexOf(chapter), next = chapters[i + 1]
+  const e = entryOf(chapter)
+  const tasks = QUIZZES[e.topic.id]?.[chapter.id] ?? [], next = nextOf(chapter)?.chapter
   const [solved, setSolved] = useState(0)
+  const [record] = useState(() => quizAttempt(`${e.topic.id}/${chapter.id}`, tasks.length)) // one attempt per visit
   const h1 = useRef<HTMLHeadingElement>(null)
   useEffect(() => { h1.current?.focus() }, [])
   return (
     <div className="page quiz-page">
-      <div className="meta"><span className="level">{t('Chapter {{n}}', { n: i })}</span><span className="level">{t(chapter.level)}</span></div>
+      <a className="crumb" href={`#/${e.topic.id}`}>{t(e.topic.title)}{e.strand.title ? ` · ${t(e.strand.title)}` : ''}</a>
+      <div className="meta"><Depth entry={e} /></div>
       <h1 ref={h1} tabIndex={-1}>{t(chapter.title)}</h1>
       <p className="quiz-score" role="status"><strong>{solved}</strong> {t('of {{n}} tasks solved', { n: tasks.length })}</p>
-      {tasks.map((task, k) => <TaskCard key={k} task={task} n={k + 1} onSolved={() => setSolved(s => s + 1)} />)}
-      <a className="btn lab-next" href={next ? `#/quiz/${next.id}` : '#/labs'}>{next ? t('Next chapter: {{title}}', { title: t(next.title) }) : t('nav.labs')}</a>
+      {tasks.map((task, k) => <TaskCard key={k} task={task} n={k + 1} record={record} onSolved={() => setSolved(s => s + 1)} />)}
+      <a className="btn lab-next" href={next ? quizHref(next) : '#/labs'}>{next ? t('Next quiz: {{title}}', { title: t(next.title) }) : t('nav.labs')}</a>
     </div>
   )
 }
 
-/** #/quiz opens the first chapter, #/quiz/<chapter> any other. */
-export function QuizRoute({ id }: { id?: string }) {
-  const chapter = chapters.find(c => c.id === id) ?? chapters[0]
-  return <ChapterQuiz key={chapter.id} chapter={chapter} />
+/** #/quiz opens the first sub-chapter, #/quiz/<topic> the first of a topic, #/quiz/<topic>/<sub-chapter> any other. */
+export function QuizRoute({ topic, id }: { topic?: string; id?: string }) {
+  const e = findEntry(topic, id) ?? path.find(x => x.topic.id === topic) ?? path[0]
+  return <ChapterQuiz key={`${e.topic.id}/${e.chapter.id}`} chapter={e.chapter} />
 }

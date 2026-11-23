@@ -2,7 +2,10 @@ import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import en from './locales/en.ts'
 import de from './locales/de.ts'
+// content first: topic files register their English via e() before the resources are built
+import './content.ts'
 import { QUIZ_EN } from './quizzes.ts'
+import { onLateEnglish } from './components/quizModel.ts'
 
 // Keys are the source text itself (German content, English UI). A missing translation shows the key.
 const saved = (() => { try { return localStorage.getItem('lang') } catch { return null } })()
@@ -19,6 +22,8 @@ i18n.use(initReactI18next).init({
   saveMissingTo: 'current',
   missingKeyHandler: (lngs, _ns, key) => { if (lngs.includes('en')) ((window as any).__missing ??= new Set()).add(key) },
 })
+
+onLateEnglish((de, en) => i18n.addResource('en', 'translation', de, en))
 
 const sync = (l: string) => {
   document.documentElement.lang = l

@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { deckOf, type Chapter } from '../content.ts'
+import { deckOf, entryOf, hrefOf, nextOf, type Chapter } from '../content.ts'
+import { sawSlide } from './me.ts'
 import { Visuals } from './Visuals.tsx'
 import { Dial } from './Dial.tsx'
 
@@ -11,17 +12,19 @@ const Chevron = ({ flip }: { flip?: boolean }) => (
 )
 
 /** Click-through slides: exit top left, small arrows at the sides, progress bar at the bottom centre. */
-export function Presentation({ chapter, index, next }: { chapter: Chapter; index: number; next?: Chapter }) {
+export function Presentation({ chapter, index }: { chapter: Chapter; index: number }) {
   const { t, i18n } = useTranslation()
   const deck = deckOf(chapter)
   const n = deck.length
   const { page, slide } = deck[index]
-  const goto = (i: number) => { location.hash = `#/${chapter.id}/${i + 1}` }
+  const home = hrefOf(chapter), next = nextOf(chapter)?.chapter
+  const goto = (i: number) => { location.hash = `${home}/${i + 1}` }
   const last = index === n - 1
-  const after = next ? `#/${next.id}` : '#/' // the last slide leads on to the next chapter
+  const after = next ? hrefOf(next) : '#/' // the last slide leads on to the next sub-chapter
   const prev = useRef(index)
   const dir = index >= prev.current ? 'fwd' : 'back'
   useEffect(() => { prev.current = index }, [index])
+  useEffect(() => { sawSlide(`${entryOf(chapter).topic.id}/${chapter.id}`, index + 1) }, [chapter, index])
 
   const stageRef = useRef<HTMLElement>(null)
   const slideRef = useRef<HTMLElement>(null)
@@ -46,7 +49,7 @@ export function Presentation({ chapter, index, next }: { chapter: Chapter; index
       else if (['ArrowLeft', 'PageUp'].includes(e.key) && index > 0) goto(index - 1)
       else if (e.key === 'Home') goto(0)
       else if (e.key === 'End') goto(n - 1)
-      else if (e.key === 'Escape') location.hash = `#/${chapter.id}`
+      else if (e.key === 'Escape') location.hash = home
     }
     addEventListener('keydown', onKey)
     return () => removeEventListener('keydown', onKey)
@@ -55,7 +58,7 @@ export function Presentation({ chapter, index, next }: { chapter: Chapter; index
   return (
     <div className="pres">
       <header className="pres-top">
-        <a className="exit" href={`#/${chapter.id}`} aria-label={t('Exit {{title}}', { title: t(chapter.title) })}>
+        <a className="exit" href={home} aria-label={t('Exit {{title}}', { title: t(chapter.title) })}>
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" /></svg>
           {t('Exit')}
         </a>
@@ -71,7 +74,7 @@ export function Presentation({ chapter, index, next }: { chapter: Chapter; index
       </main>
 
       {index > 0 && <button className="arrow" data-side="l" onClick={() => goto(index - 1)} aria-label={t('Previous slide')}><Chevron flip /></button>}
-      <a className="arrow" data-side="r" href={last ? after : `#/${chapter.id}/${index + 2}`} aria-label={last ? (next ? t('Next chapter: {{title}}', { title: t(next.title) }) : t('Back to all chapters')) : t('Next slide')}><Chevron /></a>
+      <a className="arrow" data-side="r" href={last ? after : `${home}/${index + 2}`} aria-label={last ? (next ? t('Next chapter: {{title}}', { title: t(next.title) }) : t('Back to all topics')) : t('Next slide')}><Chevron /></a>
 
       <div className="progress" role="progressbar" aria-label={t('Progress')} aria-valuemin={1} aria-valuemax={n} aria-valuenow={index + 1}>
         <i style={{ width: `${((index + 1) / n) * 100}%` }} />

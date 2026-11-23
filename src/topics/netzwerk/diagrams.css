@@ -1,0 +1,15 @@
+/* Layouts of the detailed Netzwerk diagrams. Colours and building blocks come from components/diagram.css. */
+.c1-col > h3 {
+  animation: dg-in .55s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc((var(--d, 0) + var(--i, 0)) * 260ms + 300ms); }
+.c1-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.c1-col > h3 { font-size: 20px; letter-spacing: -0.02em; display: grid; }
+.c1-col > h3 small { font-size: 14px; font-weight: 500; color: var(--ink-3); }
+
+/* 5 · ports */
+.c1-ports { display: grid; gap: 22px; }
+.c1-center .row { justify-content: center; }
+
+/* 8 · networks */
+.c1-net { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 28px; align-items: center; }
+
+@media (max-width: 760px) { .c1-net { grid-template-columns: 1fr; } }

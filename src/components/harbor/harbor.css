@@ -1,0 +1,56 @@
+/* Drawing kit of the overview slides: one colour per service of the Mensa-App. */
+.hb { animation: dg-in .55s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc((var(--d, 0) + var(--i, 0)) * 260ms + 300ms); }
+.hb text { font-family: inherit; }
+:root {
+  --svc-frontend: #11957b; --svc-frontend-d: #0b6e5a;
+  --svc-api: #ec7a2c; --svc-api-d: #b9561a;
+  --svc-db: #7656dc; --svc-db-d: #5536b4;
+  --svc-other: #6a7f9e; --svc-other-d: #4a5d79;
+  --hull: #1d63ed; --hull-d: #0b4cc4; --keel: #0b1f3a;
+  --sea: #d9e8ff; --sea-d: #b7d1fb; --land: #f1e7d0; --land-d: #d9c7a0;
+}
+.hb-ctr[data-svc='frontend'] { --c: var(--svc-frontend); --cd: var(--svc-frontend-d); }
+.hb-ctr[data-svc='api'] { --c: var(--svc-api); --cd: var(--svc-api-d); }
+.hb-ctr[data-svc='db'] { --c: var(--svc-db); --cd: var(--svc-db-d); }
+.hb-ctr[data-svc='other'] { --c: var(--svc-other); --cd: var(--svc-other-d); }
+.hb-ctr .body { fill: var(--c); stroke: var(--cd); stroke-width: 2; }
+.hb-ctr .rib { stroke: rgba(255, 255, 255, .22); stroke-width: 2; }
+.hb-ctr .plate { fill: #fff; }
+.hb-ctr .plate-t { fill: var(--cd); font-weight: 700; }
+.hb-ctr[data-open] .body { fill: color-mix(in srgb, var(--c) 10%, #fff); stroke: var(--c); stroke-width: 2.5; }
+.hb-ctr .item { fill: #fff; stroke: color-mix(in srgb, var(--c) 45%, #fff); stroke-width: 1.5; }
+.hb-ctr .item-t { fill: var(--keel); font-weight: 600; }
+.hb-ctr .head-t { fill: var(--cd); font-weight: 700; }
+.hb-ctr[data-ghost] .body { fill: none; stroke: var(--ink-3); stroke-dasharray: 6 5; }
+.hb-ctr[data-ghost] .plate-t { fill: var(--ink-3); }
+.hb-tag rect { fill: #fff; stroke: var(--line); stroke-width: 1.5; }
+.hb-tag[data-tone='blue'] rect { fill: var(--blue); stroke: none; }
+.hb-tag[data-tone='navy'] rect { fill: var(--ink); stroke: none; }
+.hb-tag[data-tone='ok'] rect { fill: #e2f5ec; stroke: var(--ok); }
+.hb-tag[data-tone='bad'] rect { fill: #fdecea; stroke: var(--bad); }
+.hb-tag[data-tone='sky'] rect { fill: var(--sky); stroke: none; }
+.hb-tag[data-tone='sand'] rect { fill: #fff3d6; stroke: #e6c27a; }
+.hb-tag .t { fill: var(--ink); font-weight: 700; }
+.hb-tag .s { fill: var(--ink-2); }
+.hb-tag[data-tone='blue'] .t, .hb-tag[data-tone='navy'] .t { fill: #fff; }
+.hb-tag[data-tone='blue'] .s, .hb-tag[data-tone='navy'] .s { fill: #dbe7ff; }
+.hb-tag[data-tone='ok'] .t, .hb-tag[data-tone='ok'] .s { fill: var(--ok); }
+.hb-tag[data-tone='bad'] .t, .hb-tag[data-tone='bad'] .s { fill: var(--bad); }
+.hb-tag[data-tone='sand'] .t { fill: #6b4a00; }
+.hb-tag[data-tone='sand'] .s { fill: #8a6a20; }
+.hb-lead { fill: none; stroke: var(--ink-3); stroke-width: 1.6; stroke-dasharray: 3 4; }
+.hb-dot { fill: var(--ink-3); }
+.hb-fill { fill: var(--keel); }
+.hb-skin { fill: #f6d3b8; stroke: var(--keel); stroke-width: 2; }
+.hb-cloth { fill: var(--blue); stroke: var(--keel); stroke-width: 2; }
+.hb-cloth[data-tone='crew'] { fill: #ec7a2c; }
+.hb-cloth[data-tone='student'] { fill: #11957b; }
+.hb-cloth[data-tone='grey'] { fill: #8ea2c0; }
+.hb-ring { fill: var(--rb, #fff); stroke: var(--rs, var(--line)); stroke-width: 2; }
+.hb-ring-t { fill: var(--rt, var(--ink-2)); font-weight: 700; }
+.hb-ring-s { fill: var(--rt, var(--ink-3)); opacity: .85; }
+.hb-arrow { fill: none; stroke: var(--ink-2); stroke-width: 2.4; }
+.hb-arrow[data-k='back'] { stroke: var(--blue); }
+.hb-arrow[data-k='ok'] { stroke: var(--ok); }
+.hb-arrow[data-k='bad'] { stroke: var(--bad); }
+.hb-arrow[data-k='mute'] { stroke: var(--ink-3); }

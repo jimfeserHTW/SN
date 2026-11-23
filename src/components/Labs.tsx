@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { labAttempt } from './me.ts'
 import { useTranslation } from 'react-i18next'
 import { BLANK, LABS, LAB_LEVELS, LabRun, type Lab } from '../labs.ts'
 import { Terminal, mergeChunks, type Chunk } from './docker/engine/cli.ts'
@@ -127,6 +128,8 @@ function Workbench({ files, lab }: { files: Record<string, string>; lab?: Lab })
   // Containers keep running while you type, so the terminal follows them on a timer.
   useEffect(() => { const id = setInterval(sync, 120); return () => clearInterval(id) }, [])
   useEffect(() => { const b = body.current; if (b) b.scrollTop = b.scrollHeight }, [log, prompt])
+  const [record] = useState(() => lab && labAttempt(lab.id, lab.steps.length)) // one attempt per visit
+  useEffect(() => { if (record && step > 0) record(step) }, [step])
 
   const selectBlank = (from = 0) => {
     const el = input.current, i = el ? el.value.indexOf(BLANK, from) : -1

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { chapters } from '../content.ts'
+import { topics, hrefOf, quizHref, type Chapter } from '../content.ts'
 import { LAB_LEVELS } from '../labs.ts'
 
 export const Mark = ({ size = 22 }: { size?: number }) => (
@@ -12,23 +12,38 @@ export const Mark = ({ size = 22 }: { size?: number }) => (
 )
 
 const href = (c: string) => `#/${c}`
-// shortcut: these sections have no pages yet, so they render without a link; give them an href once they exist
-const UNBOUND = ['stats'] as const
-type Menu = 'theory' | 'labs' | 'quiz'
+type Menu = 'theory' | 'labs' | 'quiz' | 'me'
 const LANGS = ['en', 'de'] as const
 
 /** Global bar: hover or focus Theory, Labs or Quiz to open its menu while the page behind softens, like apple.com. */
-export function Header({ route, chapterId }: { route: string; chapterId?: string }) {
+export function Header({ route, topicId }: { route: string; topicId?: string }) {
   const { t, i18n } = useTranslation()
   const [menu, setMenu] = useState<Menu | null>(null)
   const [sheet, setSheet] = useState(false)
   const timer = useRef(0)
   const show = (m: Menu) => { clearTimeout(timer.current); timer.current = window.setTimeout(() => setMenu(m), 90) }
   const hide = () => { clearTimeout(timer.current); setMenu(null) }
-  const theoryLinks = chapters.map(c => ({ id: c.id, href: href(c.id), label: t(c.title) }))
+  const meLinks = [{ id: 'stats', href: href('me'), label: t('Statistics') }, { id: 'settings', href: href('me/settings'), label: t('Settings') }]
   const labLinks = [...LAB_LEVELS.map(l => ({ id: l.id, href: href(`labs/${l.id}`), label: t(l.level) })), { id: 'sandbox', href: href('labs/sandbox'), label: t('Docker sandbox') }]
-  const quizLinks = chapters.map(c => ({ id: c.id, href: href(`quiz/${c.id}`), label: t(c.title) }))
-  const menuLinks = { theory: theoryLinks, labs: labLinks, quiz: quizLinks }
+  // Theory and quiz share one map: every topic with its sub-chapters, strand by strand.
+  const topicMap = (to: 'theory' | 'quiz') => {
+    const sub = (c: Chapter) => to === 'theory' ? hrefOf(c) : quizHref(c)
+    return (
+      <div className="mega-topics" key={to}>
+        {topics.map(tp => (
+          <div key={tp.id}>
+            <a className="mega-topic" href={to === 'theory' ? href(tp.id) : href(`quiz/${tp.id}`)}>{t(tp.title)}</a>
+            {tp.strands.map(s => (
+              <ul key={s.id}>
+                {s.title && <li className="mega-strand">{t(s.title)}</li>}
+                {s.chapters.map(c => <li key={c.id}><a href={sub(c)}>{t(c.title)}</a></li>)}
+              </ul>
+            ))}
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   useEffect(() => { hide(); setSheet(false) }, [route])
   useEffect(() => { document.body.style.overflow = sheet ? 'hidden' : '' }, [sheet])
@@ -40,13 +55,14 @@ export function Header({ route, chapterId }: { route: string; chapterId?: string
         <div className="bar-in">
           <a className="brand" href="#/" aria-label={t('home')} onMouseEnter={hide}><Mark /><span aria-hidden="true">S<span className="grow">tudy</span>N<span className="grow">othing</span></span></a>
           <nav className="nav" aria-label={t('nav.label')}>
-            <a href={href(chapters[0].id)} aria-current={chapterId ? 'page' : undefined} aria-expanded={menu === 'theory'} data-open={menu === 'theory'}
+            <a href={href(topics[0].id)} aria-current={topicId ? 'page' : undefined} aria-expanded={menu === 'theory'} data-open={menu === 'theory'}
               onMouseEnter={() => show('theory')} onFocus={() => show('theory')}>{t('nav.theory')}</a>
             <a href={href('labs')} aria-current={route.startsWith('#/labs') ? 'page' : undefined} aria-expanded={menu === 'labs'} data-open={menu === 'labs'}
               onMouseEnter={() => show('labs')} onFocus={() => show('labs')}>{t('nav.labs')}</a>
             <a href={href('quiz')} aria-current={route.startsWith('#/quiz') ? 'page' : undefined} aria-expanded={menu === 'quiz'} data-open={menu === 'quiz'}
               onMouseEnter={() => show('quiz')} onFocus={() => show('quiz')}>{t('nav.quiz')}</a>
-            {UNBOUND.map(k => <a key={k} aria-disabled="true" onMouseEnter={hide}>{t(`nav.${k}`)}</a>)}
+            <a href={href('me')} aria-current={route.startsWith('#/me') ? 'page' : undefined} aria-expanded={menu === 'me'} data-open={menu === 'me'}
+              onMouseEnter={() => show('me')} onFocus={() => show('me')}>{t('nav.me')}</a>
           </nav>
           <div className="lang" role="group" aria-label={t('lang')} onMouseEnter={hide}>
             {LANGS.map(l => <button key={l} type="button" aria-pressed={i18n.resolvedLanguage === l} onClick={() => i18n.changeLanguage(l)}>{l.toUpperCase()}</button>)}
@@ -62,9 +78,9 @@ export function Header({ route, chapterId }: { route: string; chapterId?: string
               <small>{t(`nav.${menu}`)}</small>
               <p>{t(`${menu}.blurb`)}</p>
             </div>
-            <ul className="mega-links" key={menu}>
-              {menuLinks[menu].map(l => <li key={l.id}><a href={l.href}>{l.label}</a></li>)}
-            </ul>
+            {menu === 'labs' || menu === 'me'
+              ? <ul className="mega-links" key={menu}>{(menu === 'me' ? meLinks : labLinks).map(l => <li key={l.id}><a href={l.href}>{l.label}</a></li>)}</ul>
+              : topicMap(menu)}
           </div>
         </div>
       )}
@@ -73,7 +89,7 @@ export function Header({ route, chapterId }: { route: string; chapterId?: string
         <nav className="sheet" aria-label={t('nav.label')}>
           <div>
             <span className="sheet-h">{t('nav.theory')}</span>
-            {theoryLinks.map(l => <a key={l.id} className="sheet-l" href={l.href}>{l.label}</a>)}
+            {topics.map(tp => <a key={tp.id} className="sheet-l" href={href(tp.id)}>{t(tp.title)}</a>)}
           </div>
           <div>
             <a className="sheet-h" href={href('labs')}>{t('nav.labs')}</a>
@@ -81,9 +97,12 @@ export function Header({ route, chapterId }: { route: string; chapterId?: string
           </div>
           <div>
             <a className="sheet-h" href={href('quiz')}>{t('nav.quiz')}</a>
-            {quizLinks.map(l => <a key={l.id} className="sheet-l" href={l.href}>{l.label}</a>)}
+            {topics.map(tp => <a key={tp.id} className="sheet-l" href={href(`quiz/${tp.id}`)}>{t(tp.title)}</a>)}
           </div>
-          {UNBOUND.map(k => <span key={k} className="sheet-h" aria-disabled="true">{t(`nav.${k}`)}</span>)}
+          <div>
+            <a className="sheet-h" href={href('me')}>{t('nav.me')}</a>
+            {meLinks.map(l => <a key={l.id} className="sheet-l" href={l.href}>{l.label}</a>)}
+          </div>
         </nav>
       )}
     </div>

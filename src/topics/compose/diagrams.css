@@ -1,0 +1,63 @@
+/* Layouts of the detailed Compose diagrams. Colours and building blocks come from components/diagram.css and code.css. */
+.c1-legend, .day, .tree, .op, .rules {
+  animation: dg-in .55s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc((var(--d, 0) + var(--i, 0)) * 260ms + 300ms); }
+
+/* 4 · anatomy: one file with group brackets, legend beside it */
+.c1-anat { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: end; }
+.c1-anat .code-body { --lh: 1.42em; font-size: clamp(11px, .95vw, 14px); }
+.c1-legend { display: grid; gap: 10px; font-size: 15px; color: var(--ink-2); }
+.c1-legend span { display: flex; align-items: center; gap: 10px; }
+.lg-on, .lg-off { font-family: var(--mono); font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: 6px; background: #102445; color: #fff; }
+.lg-off { color: rgba(255, 255, 255, .62); }
+
+/* 6 · variables */
+.c1-vars { display: grid; gap: 14px; }
+
+/* 10 · start order */
+.c1-order { display: grid; gap: 14px; }
+
+/* 11 · everyday commands */
+.c1-days { display: grid; gap: 16px; }
+.days { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.day { padding: 14px 16px; border-radius: 18px; background: var(--card); box-shadow: 0 0 0 1px var(--line); }
+.day h3 { display: flex; align-items: center; gap: 10px; font-size: 17px; margin-bottom: 8px; }
+.day h3 span { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--blue); color: #fff; font-size: 13px; }
+.day ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.day li { display: grid; }
+.day code { font-family: var(--mono); font-size: clamp(12px, 1.05vw, 14px); font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.day code i { font-style: normal; font-weight: 400; color: var(--ink-3); }
+.day small { font-size: 13px; color: var(--ink-2); }
+.day li[data-dim] { opacity: .45; }
+.day li[data-bad] code, .day li[data-bad] small { color: var(--bad); }
+
+/* 12 · merge */
+.c1-merge { display: grid; gap: 14px; }
+.mrg { display: grid; grid-template-columns: minmax(170px, .8fr) minmax(0, 1fr) 20px minmax(0, 1fr) 20px minmax(0, 1.25fr); gap: 10px; align-items: start; }
+.tree { display: grid; gap: 8px; font-size: 14px; }
+.tree-root { display: flex; align-items: center; gap: 8px; font-size: 16px; }
+.tree ul { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--line); display: grid; gap: 6px; }
+.tree li { display: grid; color: var(--ink-3); }
+.tree li code { font-family: var(--mono); font-size: 12px; }
+.tree li small { font-size: 12px; }
+.tree li[data-on] { color: var(--ink); }
+.tree li[data-on] small { color: var(--blue); font-weight: 700; }
+.tree-cmd { font-size: 12px; color: var(--ink-2); }
+.tree-cmd code { font-family: var(--mono); }
+.op { font-size: 28px; font-weight: 800; color: var(--ink-3); text-align: center; }
+.c1-merge .code-body { font-size: clamp(11px, .95vw, 13px); }
+.rules { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: center; font-size: 14px; color: var(--ink-2); }
+.rules b { color: var(--ink); }
+.c1-merge .layer { padding: 9px 16px; font-size: 15px; }
+.c1-merge .col h3 { font-size: 15px; }
+.op { align-self: center; }
+
+/* 13 · pitfalls: compact table */
+.c1-trap .tbl { font-size: clamp(13px, 1.15vw, 15px); }
+.c1-trap .tbl thead th { padding: 10px 16px; }
+.c1-trap .tbl tbody th, .c1-trap .tbl td { padding: 8px 16px; }
+.c1-trap .tbl tbody th { white-space: normal; }
+
+@media (max-width: 760px) {
+  .mrg, .days, .c1-anat { grid-template-columns: 1fr; }
+  .op { display: none; }
+}

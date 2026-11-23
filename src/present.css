@@ -157,6 +157,8 @@
 /* path: metro line, current stop pulses, advanced stops are tinted */
 .path { list-style: none; padding: 0; margin: 0; display: flex; }
 .path li { flex: 1 1 0; min-width: 110px; position: relative; display: grid; justify-items: center; align-content: start; gap: 8px; padding-top: 4px; text-align: center; font-size: 17px; color: var(--ink-2); }
+.path li[data-tier='intro'] { --tier: var(--ok); }
+.path li[data-tier='topic'] { --tier: var(--blue); }
 .path li[data-tier='Beginner'] { --tier: var(--ok); }
 .path li[data-tier='Intermediate'] { --tier: var(--blue); }
 .path li[data-tier='Advanced'] { --tier: #b2531a; }
@@ -186,3 +188,17 @@
 .bars .bar[data-s='a'] i { background: #c8472f; }
 .bars .bar[data-s='b'] i { background: var(--blue); }
 .bars .bar span { font-size: 13px; color: var(--ink-3); }
+
+/* learning path slide: all topics, then the sub-chapters of the current topic, strand by strand */
+.lp { display: grid; gap: 34px; }
+.lp .path li { font-size: 15px; min-width: 0; }
+.lp-topic { display: grid; gap: 14px; padding: 22px 26px 24px; border-radius: 22px; background: var(--card); box-shadow: 0 0 0 1px var(--line); animation: pop .6s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 320ms + 350ms); }
+.lp-topic > b { font-size: 20px; letter-spacing: -0.02em; }
+.lp-strand { display: grid; gap: 8px; }
+.lp-strand small { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); }
+.lp-strand ol { list-style: none; padding: 0; margin: 0; display: flex; gap: 10px; }
+.lp-strand li { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px; background: var(--paper); color: var(--ink-2); font-size: 15px; line-height: 1.25; box-shadow: inset 0 0 0 1.5px var(--line); }
+.lp-strand li i { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: 13px; font-weight: 700; color: var(--blue); box-shadow: inset 0 0 0 2px var(--blue); background: var(--card); }
+.lp-strand li[data-done] { color: var(--ink); }
+.lp-strand li[data-done] i { background: var(--blue); color: #fff; }
+.lp-strand li[data-on] { background: var(--sky); box-shadow: inset 0 0 0 2px var(--blue); font-weight: 700; }

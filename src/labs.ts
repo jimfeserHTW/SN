@@ -1,15 +1,16 @@
 // The lab course. Help shrinks with each level: one gap per command, then command skeletons, then goals with hints, then whole stacks.
 // Task wording follows the same curve: Beginner and Intermediate mark command parts in `backticks`, Advanced leaves them unmarked, Expert only paraphrases them.
-// Practice only: theory stays in src/cN/. Steps are checked against the simulated Docker daemon, never against the exact command typed.
+// Practice only: theory stays in src/topics/. Steps are checked against the simulated Docker daemon, never against the exact command typed.
 import type { Container, Daemon } from './components/docker/engine/daemon.ts'
 import type { Terminal } from './components/docker/engine/cli.ts'
-import type { Chapter, Goal } from './components/types.ts'
+import type { Goal } from './components/types.ts'
 
 export const BLANK = '___'
 export type LabCheck = { d: Daemon; file(name: string): string; ran(re: RegExp): boolean; saw(re: RegExp): boolean }
 /** `cmd` is put into the terminal with gaps to fill in. */
 export type LabStep = Goal<LabCheck> & { cmd?: string; hint?: string }
-export type Lab = { id: string; level: Chapter['level']; title: string; blurb: string; containers: number; files?: Record<string, string>; steps: LabStep[] }
+export type Level = 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert'
+export type Lab = { id: string; level: Level; title: string; blurb: string; containers: number; files?: Record<string, string>; steps: LabStep[] }
 /** Each level is its own page, #/labs/<id>. The first one is the landing page of the labs. */
 export const LAB_LEVELS: { id: string; level: Lab['level']; help: string }[] = [
   { id: 'beginner', level: 'Beginner', help: 'Commands are prepared, you fill in one gap.' },

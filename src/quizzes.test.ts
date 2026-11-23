@@ -5,14 +5,14 @@ import locale from './locales/en.ts'
 import { QUIZZES, QUIZ_EN } from './quizzes.ts'
 
 const de = (s: string) => s, en = (s: string) => QUIZ_EN[s] ?? locale[s] ?? s
-const all = Object.entries(QUIZZES).flatMap(([id, tasks]) => tasks.map(task => ({ id, task })))
+const chapters = Object.entries(QUIZZES).flatMap(([topic, subs]) => Object.entries(subs).map(([id, tasks]) => ({ id: `${topic}/${id}`, tasks })))
+const all = chapters.flatMap(({ id, tasks }) => tasks.map(task => ({ id, task })))
 
-test('every chapter has at least ten tasks of every kind', () => {
-  assert.equal(Object.keys(QUIZZES).length, 6)
-  for (const [id, tasks] of Object.entries(QUIZZES)) {
-    assert.ok(tasks.length >= 10, id)
-    const kinds = new Set(tasks.map(t => t.kind))
-    for (const k of ['choice', 'order', 'match', 'bugs', 'figure', 'gaps'] as const) assert.ok(kinds.has(k), `${id} has no ${k}`)
+test('every sub-chapter has a bundle of at least three tasks, mixing kinds', () => {
+  assert.equal(Object.keys(QUIZZES).length, 7)
+  for (const { id, tasks } of chapters) {
+    assert.ok(tasks.length >= 3, `${id} has ${tasks.length} tasks`)
+    assert.ok(new Set(tasks.map(t => t.kind)).size >= 2, `${id} uses one kind only`)
   }
 })
 

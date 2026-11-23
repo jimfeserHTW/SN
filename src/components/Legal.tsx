@@ -29,7 +29,7 @@ const DATENSCHUTZ = (
     <h2>3. Keine Cookies, kein Tracking</h2>
     <p>Diese Seite setzt keine Cookies und verwendet keine Analyse-, Tracking- oder Werbedienste. Schriftarten werden lokal ausgeliefert, es werden keine Inhalte von Drittanbietern nachgeladen.</p>
     <h2>4. Lokaler Speicher</h2>
-    <p>Die gewählte Sprache wird im lokalen Speicher Ihres Browsers (localStorage, Schlüssel „lang“) abgelegt, damit sie beim nächsten Besuch erhalten bleibt. Dieser Wert verlässt Ihr Gerät nicht und kann jederzeit über die Browsereinstellungen gelöscht werden. Die Speicherung ist für den von Ihnen gewünschten Dienst erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
+    <p>Die gewählte Sprache wird im lokalen Speicher Ihres Browsers (localStorage, Schlüssel „lang“) abgelegt, damit sie beim nächsten Besuch erhalten bleibt. Unter „Mein Bereich“ werden außerdem Ihr Lernfortschritt (gesehene Folien, gelöste Quizaufgaben mit Zeitpunkt und Ergebnis, geschaffte Lab-Schritte) und Ihre Einstellungen dort gespeichert (Schlüssel „me“). Diese Werte verlassen Ihr Gerät nicht und können jederzeit über die Browsereinstellungen gelöscht werden. Die Speicherung ist für den von Ihnen gewünschten Dienst erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG).</p>
     <h2>5. Kontakt per E-Mail</h2>
     <p>Wenn Sie per E-Mail Kontakt aufnehmen, werden Ihre Angaben nur zur Bearbeitung der Anfrage verwendet (Art. 6 Abs. 1 lit. b bzw. f DSGVO) und gelöscht, sobald sie nicht mehr erforderlich sind.</p>
     <h2>6. Ihre Rechte</h2>

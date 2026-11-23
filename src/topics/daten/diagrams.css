@@ -1,0 +1,19 @@
+/* Layouts of the detailed Daten diagrams. Colours and building blocks come from components/diagram.css. */
+.c1-col > h3, .vol-tbl, .vol-tbl tr {
+  animation: dg-in .55s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc((var(--d, 0) + var(--i, 0)) * 260ms + 300ms); }
+.c1-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.c1-col > h3 { font-size: 20px; letter-spacing: -0.02em; display: grid; }
+.c1-col > h3 small { font-size: 14px; font-weight: 500; color: var(--ink-3); }
+
+/* 9 · volumes */
+.c1-vol { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 28px; align-items: center; }
+.vol-tbl { font-size: 14px; }
+.vol-tbl thead th { padding: 12px 14px; white-space: nowrap; }
+.vol-tbl tbody th, .vol-tbl td { padding: 10px 14px; vertical-align: middle; }
+.vol-tbl tbody th { white-space: normal; }
+.vol-tbl th code { display: block; font-size: 13px; }
+.vol-tbl small { display: block; font-size: 12px; font-weight: 500; color: var(--ink-3); line-height: 1.3; margin-top: 3px; }
+.vol-tbl td { text-align: center; }
+.vol-tbl .mk { display: inline-grid; width: 24px; height: 24px; font-size: 13px; }
+
+@media (max-width: 760px) { .c1-vol { grid-template-columns: 1fr; } }

@@ -1,54 +1,63 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { chapters, deckOf } from './content.ts'
+import { deckOf, findEntry, path, topics } from './content.ts'
 import { Header, Mark } from './components/Header.tsx'
 import { LEGAL, LegalView, SOURCE, type LegalId } from './components/Legal.tsx'
 import { Landing } from './components/Landing.tsx'
-import { ChapterView } from './components/Pages.tsx'
+import { ChapterView, TopicView } from './components/Pages.tsx'
 import { Presentation } from './components/Presentation.tsx'
 import { LabsRoute } from './components/Labs.tsx'
 import { QuizRoute } from './components/Quiz.tsx'
+import { MeRoute } from './components/Me.tsx'
 import { LABS, LAB_LEVELS } from './labs.ts'
 
 // Hash routes keep the app working on GitHub Pages sub-paths without server rewrites:
-//   #/                 landing
-//   #/labs             first lab level
-//   #/labs/<level>     one lab level
-//   #/labs/<lab>       one lab, or the free Docker sandbox (#/labs/sandbox)
-//   #/quiz             quiz of the first chapter
-//   #/quiz/<chapter>   quiz of one chapter
-//   #/<chapter>        chapter intro
-//   #/<chapter>/<n>    presentation, slide n (1-based)
+//   #/                          landing
+//   #/<topic>                   topic page with its sub-chapters
+//   #/<topic>/<sub>             sub-chapter page
+//   #/<topic>/<sub>/<n>         presentation, slide n (1-based)
+//   #/quiz[/<topic>[/<sub>]]    quiz of a sub-chapter (default: the first one)
+//   #/labs[/<level>|/<lab>]     labs, or the free Docker sandbox (#/labs/sandbox)
+//   #/me[/settings]             my area: statistics, or settings
+// Chapter ids before the topic structure. Old links land on the topic that now holds those slides.
+const LEGACY: Record<string, string> = { basics: 'einfuehrung', 'einfuehrung-docker': 'einfuehrung', 'einfuehrung-compose': 'einfuehrung', 'deep-dive': 'architektur', 'compose-deep-dive': 'compose', 'docker-internals': 'architektur', 'compose-internals': 'compose' }
 const parse = (hash: string) => {
-  const [c, n] = hash.replace(/^#\/?/, '').split('/')
-  const chapter = chapters.find(x => x.id === c)
-  const total = chapter ? deckOf(chapter).length : 0
-  const slide = /^\d+$/.test(n ?? '') ? Math.min(Math.max(Number(n), 1), total) - 1 : -1
-  const legal = Object.hasOwn(LEGAL, c) ? c as LegalId : undefined
-  return { chapter, slide, legal, labs: c === 'labs', labId: c === 'labs' ? n : undefined, quiz: c === 'quiz', quizId: c === 'quiz' ? n : undefined }
+  const [a, b, c] = hash.replace(/^#\/?/, '').split('/')
+  const topic = topics.find(x => x.id === a)
+  const entry = topic ? findEntry(a, b) : undefined
+  const total = entry ? deckOf(entry.chapter).length : 0
+  const slide = entry && /^\d+$/.test(c ?? '') ? Math.min(Math.max(Number(c), 1), total) - 1 : -1
+  const legal = Object.hasOwn(LEGAL, a) ? a as LegalId : undefined
+  return { topic, chapter: entry?.chapter, slide, legal, labs: a === 'labs', labId: a === 'labs' ? b : undefined, quiz: a === 'quiz' ? { topic: b, id: c } : undefined, me: a === 'me' ? b ?? 'stats' : undefined }
 }
 
 export default function App() {
   const { t: tr, i18n } = useTranslation()
   const [hash, setHash] = useState(location.hash)
   useEffect(() => {
-    const on = () => setHash(location.hash)
+    const on = () => {
+      const old = LEGACY[location.hash.replace(/^#\/?/, '').split('/')[0]]
+      if (old) location.replace(`#/${old}`)
+      else setHash(location.hash)
+    }
+    on()
     addEventListener('hashchange', on)
     return () => removeEventListener('hashchange', on)
   }, [])
-  const { chapter, slide, legal, labs, labId, quiz, quizId } = parse(hash)
+  const { topic, chapter, slide, legal, labs, labId, quiz, me } = parse(hash)
   useEffect(() => {
     const labTitle = labId === 'sandbox' ? 'Docker sandbox' : LABS.find(l => l.id === labId)?.title ?? (LAB_LEVELS.find(l => l.id === labId) ?? LAB_LEVELS[0]).level
-    const t = chapter && slide >= 0 ? tr(deckOf(chapter)[slide].slide.title) : chapter ? tr(chapter.title) : legal ? tr(LEGAL[legal].title) : labs ? tr(labTitle) : quiz ? `${tr('nav.quiz')}: ${tr((chapters.find(c => c.id === quizId) ?? chapters[0]).title)}` : tr('title')
+    const quizTitle = quiz && (findEntry(quiz.topic, quiz.id) ?? path.find(x => x.topic.id === quiz.topic) ?? path[0]).chapter.title
+    const t = chapter && slide >= 0 ? tr(deckOf(chapter)[slide].slide.title) : chapter ? tr(chapter.title) : topic ? tr(topic.title) : legal ? tr(LEGAL[legal].title) : labs ? tr(labTitle) : quizTitle ? `${tr('nav.quiz')}: ${tr(quizTitle)}` : me ? `${tr('nav.me')}: ${tr(me === 'settings' ? 'Settings' : 'Statistics')}` : tr('title')
     document.title = `${t} – StudyNothing`
-  }, [chapter, slide, legal, labs, labId, quiz, quizId, tr, i18n.language])
+  }, [topic, chapter, slide, legal, labs, labId, quiz?.topic, quiz?.id, me, tr, i18n.language])
 
-  if (chapter && slide >= 0) return <Presentation chapter={chapter} index={slide} next={chapters[chapters.indexOf(chapter) + 1]} />
+  if (chapter && slide >= 0) return <Presentation chapter={chapter} index={slide} />
   // App shell for every non-presentation page: sticky header on top, footer at the end of the page
   return (
     <div className="shell">
-      <Header route={hash} chapterId={chapter?.id} />
-      <main id="main">{chapter ? <ChapterView chapter={chapter} /> : legal ? <LegalView id={legal} /> : labs ? <LabsRoute id={labId} /> : quiz ? <QuizRoute id={quizId} /> : <Landing />}</main>
+      <Header route={hash} topicId={topic?.id} />
+      <main id="main">{chapter ? <ChapterView chapter={chapter} /> : topic ? <TopicView topic={topic} /> : legal ? <LegalView id={legal} /> : labs ? <LabsRoute id={labId} /> : quiz ? <QuizRoute topic={quiz.topic} id={quiz.id} /> : me ? <MeRoute key={me} id={me} /> : <Landing />}</main>
       <footer className="foot">
         <div className="foot-in">
           <a className="brand" href="#/" aria-label={tr('home')}><Mark />StudyNothing</a>

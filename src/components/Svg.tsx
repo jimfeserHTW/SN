@@ -7,9 +7,10 @@ export type BoxTone = 'hw' | 'kernel' | 'kchip' | 'guest' | 'hyper' | 'engine' |
 export type ArrowKind = 'go' | 'back' | 'bad' | 'ok' | 'mute'
 const kinds: ArrowKind[] = ['go', 'back', 'bad', 'ok', 'mute']
 
-export function Svg({ w, h, label, children }: { w: number; h: number; label: string; children: ReactNode }) {
+/** `top` crops empty space above a scene without moving its coordinates. */
+export function Svg({ w, h, label, children, top = 0 }: { w: number; h: number; label: string; children: ReactNode; top?: number }) {
   return (
-    <svg className="dgm" viewBox={`0 0 ${w} ${h}`} role="img" aria-label={tr(label)}>
+    <svg className="dgm" viewBox={`0 ${top} ${w} ${h}`} role="img" aria-label={tr(label)}>
       <defs>
         {kinds.map(k => (
           <marker key={k} id={`ah-${k}`} className={`ah ah-${k}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
