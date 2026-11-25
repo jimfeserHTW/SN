@@ -35,6 +35,9 @@ const quiz: Record<string, Task[]> = {
     choice('Was bewirkt `command:` in einem Service?', ['Es ersetzt nur CMD, der ENTRYPOINT bleibt', 'Es ersetzt ENTRYPOINT und CMD', 'Es läuft zusätzlich nach dem Start'], 0, 'Erst `entrypoint:` ersetzt den Einstieg und leert dabei auch CMD.'),
   ],
   'arbeiten': [
+    choice(e('Das Image mensa-api hat einen HEALTHCHECK im Dockerfile. In der compose.yaml steht für api kein healthcheck. Was gilt?', 'The image mensa-api has a HEALTHCHECK in the Dockerfile. compose.yaml has no healthcheck for api. What applies?'), [
+      e('Kein Healthcheck, weil Compose keinen hat', 'No healthcheck, because Compose has none'), e('Der HEALTHCHECK aus dem Image', 'The HEALTHCHECK from the image'), e('Compose bricht mit einem Fehler ab', 'Compose stops with an error'),
+    ], 1, e('Der HEALTHCHECK reist mit dem Image. Die compose.yaml kann ihn ändern oder mit disable: true abschalten.', 'The HEALTHCHECK travels with the image. compose.yaml can change it or switch it off with disable: true.')),
     match(e('Was macht welcher Befehl? Alle beginnen mit `docker compose`.', 'What does each command do? All start with `docker compose`.'), [
     ['up -d', e('Alles im Hintergrund starten', 'Start everything in the background')],
     ['ps', e('Laufende Services und Ports zeigen', 'Show running services and ports')],

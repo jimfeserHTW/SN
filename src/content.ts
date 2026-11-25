@@ -10,10 +10,11 @@ import daten from './topics/daten/index.tsx'
 import netzwerk from './topics/netzwerk/index.tsx'
 import isolation from './topics/isolation/index.tsx'
 import compose from './topics/compose/index.tsx'
+import absturz from './topics/absturz/index.tsx'
 
 export * from './components/types.ts'
 
-export const topics: Topic[] = [einfuehrung, architektur, images, daten, netzwerk, isolation, compose]
+export const topics: Topic[] = [einfuehrung, architektur, images, daten, netzwerk, isolation, compose, absturz]
 
 /** One sub-chapter at its place: topic, strand, and depth inside the strand (0 = overview). */
 export type Entry = { topic: Topic; strand: Strand; chapter: Chapter; depth: number; of: number }

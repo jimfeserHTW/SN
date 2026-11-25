@@ -15,6 +15,9 @@ const quiz: Record<string, Task[]> = {
       e('localhost wäre der Container selbst. host.docker.internal zeigt auf den eigenen Rechner.', 'localhost would be the container itself. host.docker.internal points to your own machine.'), '.env'),
   ],
   'ports-netze': [
+    choice(e('Zwei Container wurden mit docker run ohne --network gestartet. Warum findet der eine den anderen nicht über den Namen?', 'Two containers were started with docker run without --network. Why does one not find the other by name?'), [
+      e('Im Standard-Netz bridge gibt es keinen DNS für Container-Namen', 'The default network bridge has no DNS for container names'), e('Container haben nie Namen', 'Containers never have names'), e('Der Port fehlt', 'The port is missing'),
+    ], 0, e('Namen löst Docker nur in eigenen Netzen auf: docker network create, oder Compose, das selbst ein Netz anlegt.', 'Docker only resolves names in your own networks: docker network create, or Compose, which creates a network itself.')),
     figure(e('Der Service hat `ports: "8080:80"`. Trage beide Portnummern ein.', 'The service has `ports: "8080:80"`. Enter both port numbers.'), flow(
     [e('Browser', 'Browser'), e('Host-Port [[8080]]', 'Host port [[8080]]'), e('Container-Port [[80]]', 'Container port [[80]]')],
     [e('ruft auf', 'requests'), e('leitet weiter', 'forwards')],

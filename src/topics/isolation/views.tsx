@@ -80,14 +80,14 @@ export const Fuse = () => (
       <Tag x={40} y={240} w={440} label={e('Limit überschritten: nur die api wird beendet', 'Limit exceeded: only the api is stopped')} sub={e('Exit-Code 137 · OOMKilled', 'exit code 137 · OOMKilled')} tone="bad" i={2} />
       <Tag x={520} y={240} w={440} label={e('Spring Boot: nicht nur der Heap zählt', 'Spring Boot: not only the heap counts')} sub={e('Threads, Metaspace und Puffer brauchen auch Speicher', 'threads, metaspace and buffers need memory too')} tone="sand" i={3} />
     </Svg>
-    <Take i={4} label={e('Merke', 'Remember')} text={e('Wer über sein Limit will, wird beendet, die anderen laufen weiter. Exit-Code 137 heißt fast immer: Speicher-Limit zu klein.', 'Whoever wants more than the limit is stopped, the others keep running. Exit code 137 almost always means: memory limit too small.')} />
+    <Take i={4} label={e('Merke', 'Remember')} text={e('Wer über sein Limit will, wird beendet, die anderen laufen weiter. Exit-Code 137 heißt: hart beendet. Steht in docker inspect OOMKilled: true, war das Speicher-Limit zu klein.', 'Whoever wants more than the limit is stopped, the others keep running. Exit code 137 means: killed hard. If docker inspect shows OOMKilled: true, the memory limit was too small.')} />
   </div>
 )
 
 /* ── capabilities: which rights a container gets ── */
 const doors: [string, boolean][] = [
   [e('eigene Dateien ändern', 'change its own files'), true], [e('eigenes Netz nutzen', 'use its own network'), true], [e('eigene Prozesse starten', 'start its own processes'), true],
-  [e('Kernel-Module laden', 'load kernel modules'), false], [e('die Systemuhr stellen', 'set the system clock'), false], [e('fremde Container öffnen', 'open other containers'), false],
+  [e('Kernel-Module laden', 'load kernel modules'), false], [e('die Systemuhr stellen', 'set the system clock'), false], [e('fremde Prozesse auslesen', 'read other processes'), false],
 ]
 export const Rules = () => (
   <div className="dg-col">

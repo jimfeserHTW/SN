@@ -5,10 +5,10 @@ import { Box, Tag, Lead, Mark, In, Txt, Go, type Svc } from '../../components/ha
 
 // Overview slides of the first sub-chapter: who does what, drawn as machines, programs and the kernel. Technical terms only.
 const arrow = (d: string, i: number) => <Go d={d} i={i} />
-const term = (x: number, y: number, w: number, cmd: string, i: number) => (
+const term = (x: number, y: number, w: number, cmd: string, i: number, size = 14) => (
   <In i={i}>
     <rect x={x} y={y} width={w} height={60} rx={12} fill="var(--ink)" />
-    <text x={x + 16} y={y + 37} fontSize={14} fill="#fff" style={{ fontFamily: 'var(--mono)' }}>{cmd}</text>
+    <text x={x + 16} y={y + 37} fontSize={size} fill="#fff" style={{ fontFamily: 'var(--mono)' }}>{cmd}</text>
   </In>
 )
 
@@ -63,7 +63,7 @@ export const Intercom = () => (
     <Svg w={1000} h={340} label={e('Der Client spricht über die Docker-API mit dem Daemon. Ein Client auf einem anderen Rechner kann dieselbe API übers Netz nutzen.', 'The client talks to the daemon over the Docker API. A client on another machine can use the same API over the network.')}>
       <Zone x={20} y={60} w={270} h={260} label={e('Anderer Rechner', 'Another machine')} />
       <In i={4}><Icon name="laptop" x={124} y={100} s={60} /></In>
-      {term(36, 196, 238, '$ docker -H server ps', 4)}
+      {term(28, 196, 254, '$ docker -H ssh://server ps', 4, 13)}
       <Zone x={320} y={60} w={660} h={260} label={e('Rechner mit Docker', 'Machine with Docker')} sub="server" />
       {term(340, 115, 190, '$ docker ps', 1)}
       <Arrow d="M534 145 H566" i={2} />
@@ -73,13 +73,13 @@ export const Intercom = () => (
       <Arrow d="M870 178 V218" i={3} />
       <Box x={800} y={222} w={140} h={56} svc="api" i={3} />
       <Arrow d="M278 226 C420 226 600 260 650 180" kind="back" i={4} />
-      <Label x={470} y={268} size={13} tone="muted" i={4}>{e('übers Netz', 'over the network')}</Label>
+      <Label x={470} y={268} size={13} tone="muted" i={4}>{e('übers Netz, per SSH', 'over the network, via SSH')}</Label>
       <Tag x={330} y={0} w={210} label={e('Client', 'Client')} sub={e('docker im Terminal', 'docker in the terminal')} i={1} />
       <Tag x={560} y={0} w={190} label={e('Docker-API', 'Docker API')} sub={e('die Schnittstelle', 'the interface')} tone="blue" i={2} />
       <Tag x={770} y={0} w={200} label="dockerd" sub={e('der Daemon', 'the daemon')} i={3} />
       <Tag x={30} y={0} w={250} label={e('Auch von außen', 'From outside too')} sub={e('ein Befehl für einen fernen Rechner', 'an order for a distant machine')} tone="sky" i={4} />
     </Svg>
-    <Take i={5} label={e('Merke', 'Remember')} text={e('Client und Daemon sind zwei Programme, die über die Docker-API reden. Darum kann der Client auch auf einem anderen Rechner laufen als der Daemon.', 'Client and daemon are two programs that talk over the Docker API. That is why the client can also run on another machine than the daemon.')} />
+    <Take i={5} label={e('Merke', 'Remember')} text={e('Client und Daemon sind zwei Programme, die über die Docker-API reden. Darum kann der Client auch auf einem anderen Rechner laufen als der Daemon. Übers Netz nur per SSH oder TLS: Wer die API erreicht, steuert den Rechner wie root.', 'Client and daemon are two programs that talk over the Docker API. That is why the client can also run on another machine than the daemon. Over the network only via SSH or TLS: whoever reaches the API controls the machine like root.')} />
   </div>
 )
 
@@ -135,12 +135,12 @@ export const NoVm = () => (
 const life: { title: string; cmd: string; sub: string; svc?: boolean; dim?: boolean; ghost?: boolean }[] = [
   { title: e('angelegt', 'created'), cmd: 'docker create', sub: e('aus dem Image', 'from the image') },
   { title: e('laufend', 'running'), cmd: 'docker start', sub: e('der Prozess läuft', 'the process runs'), svc: true },
-  { title: e('angehalten', 'stopped'), cmd: 'docker stop', sub: e('existiert noch, mit Dateien', 'still exists, with its files'), dim: true },
+  { title: e('gestoppt', 'stopped'), cmd: 'docker stop', sub: e('existiert noch, mit Dateien', 'still exists, with its files'), dim: true },
   { title: e('entfernt', 'removed'), cmd: 'docker rm', sub: e('weg, mit allen Änderungen', 'gone, with all changes'), ghost: true },
 ]
 export const Life = () => (
   <div className="dg-col">
-    <Svg w={1000} h={330} label={e('Vier Stationen: angelegt, laufend, angehalten, entfernt', 'Four stages: created, running, stopped, removed')}>
+    <Svg w={1000} h={330} label={e('Vier Stationen: angelegt, laufend, gestoppt, entfernt', 'Four stages: created, running, stopped, removed')}>
       {life.map((s, k) => {
         const x = 10 + k * 250
         return (
@@ -156,7 +156,7 @@ export const Life = () => (
       })}
       <Tag x={190} y={296} w={620} label={e('docker run = anlegen und gleich starten', 'docker run = create and start right away')} tone="blue" i={4} />
     </Svg>
-    <Take i={5} label={e('Merke', 'Remember')} text={e('Angehalten ist nicht gelöscht. Erst docker rm entfernt den Container. Das Image bleibt auf der Festplatte.', 'Stopped is not removed. Only docker rm removes the container. The image stays on the disk.')} />
+    <Take i={5} label={e('Merke', 'Remember')} text={e('Gestoppt ist nicht gelöscht. Erst docker rm entfernt den Container. Das Image bleibt auf der Festplatte.', 'Stopped is not removed. Only docker rm removes the container. The image stays on the disk.')} />
   </div>
 )
 

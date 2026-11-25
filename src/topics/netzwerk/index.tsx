@@ -2,7 +2,7 @@ import type { Topic } from '../../components/types.ts'
 import { e } from '../../components/quizModel.ts'
 import { Ports, Networks, NetModes, Doors, NetBridge, PortPath, NetKernel, Scale } from './diagrams.tsx'
 import { OwnLine, Numbers, PhoneBook, Zones, HostCall } from './views.tsx'
-import { ListenAddress } from './tech.tsx'
+import { ListenAddress, NetCreate } from './tech.tsx'
 import { TechMap } from '../../components/harbor/techmap.tsx'
 
 // Netzwerk: how containers are reached and find each other. From ports and DNS down to veth, bridge and NAT.
@@ -40,6 +40,7 @@ const topic: Topic = {
           ] },
           { id: 'netze', title: e('Zwischen Containern', 'Between containers'), summary: e('Namen statt Adressen und die drei Netzwerk-Modi.', 'Names instead of addresses and the three network modes.'), slides: [
             { title: 'Netzwerke: Services finden sich über Namen', view: <Networks /> },
+            { title: e('Ohne Compose: docker network create', 'Without Compose: docker network create'), view: <NetCreate /> },
             { title: 'Drei Netzwerk-Modi', view: <NetModes /> },
             { title: e('Technikkarte: das Bild bis hierher', 'Technical map: the picture so far'), view: <TechMap known={['client', 'daemon', 'container', 'images', 'registry', 'volumes']} focus={['net', 'port']} /> },
             ] },

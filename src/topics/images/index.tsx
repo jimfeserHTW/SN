@@ -2,7 +2,7 @@ import type { Topic } from '../../components/types.ts'
 import { e } from '../../components/quizModel.ts'
 import { Pull, Overlay, CopyOnWrite, SharedLayers, BuildFlow, DiskMap } from './diagrams.tsx'
 import { Sealed, Layers, PackingList, Labels, Warehouses, Shared, Uses } from './views.tsx'
-import { DockerfileLines, BuildCache, MultiStage, TagsDigests, LeanBase, ImageFiles, Prune } from './tech.tsx'
+import { DockerfileLines, BuildCache, MultiStage, TagsDigests, LeanBase, ImageFiles, Prune, Push, Arch } from './tech.tsx'
 import { TechMap } from '../../components/harbor/techmap.tsx'
 
 // Images und Build: what is shipped. From the read-only image (overview) to layers on disk.
@@ -40,9 +40,11 @@ const topic: Topic = {
           { id: 'holen', title: e('Holen und bauen', 'Pulling and building'), summary: e('docker pull und docker build Schritt für Schritt.', 'docker pull and docker build step by step.'), slides: [
             { title: 'docker pull: Wie ein Image ankommt', view: <Pull /> },
             { title: e('Tags und Digests', 'Tags and digests'), view: <TagsDigests /> },
+            { title: e('Image teilen: tag, login, push', 'Sharing an image: tag, login, push'), view: <Push /> },
             { title: e('Das Dockerfile Zeile für Zeile', 'The Dockerfile line by line'), view: <DockerfileLines /> },
             { title: 'build: Vom Ordner zum Image', view: <BuildFlow /> },
             { title: e('Der Build-Cache: warum die Reihenfolge zählt', 'The build cache: why the order matters'), view: <BuildCache /> },
+            { title: e('Ein Image pro CPU-Architektur', 'One image per CPU architecture'), view: <Arch /> },
             { title: e('Technikkarte: das Bild bis hierher', 'Technical map: the picture so far'), view: <TechMap known={['client', 'daemon', 'container']} focus={['images', 'registry']} /> },
             ] },
         ],

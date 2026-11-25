@@ -3,6 +3,7 @@ import { e } from '../../components/quizModel.ts'
 import { PidNs, Cgroups, RunSummary, Limits, NsMap, CgroupFiles, Gates, ProofMap } from './diagrams.tsx'
 import { Crowd, Privacy, Rations, Fuse, Rules, Walls } from './views.tsx'
 import { NotRoot } from './tech.tsx'
+import { InImage, Attack, Scan, Harden, Rebuild } from './security.tsx'
 import { TechMap } from '../../components/harbor/techmap.tsx'
 
 // Isolation und Sicherheit: many containers share one machine. Ends with the whole picture of Docker.
@@ -11,7 +12,7 @@ const topic: Topic = {
   title: e('Isolation und Sicherheit', 'Isolation and security'),
   blurb: e('Wie sich viele Container einen Rechner teilen, ohne sich zu sehen oder zu stören.', 'How many containers share one machine without seeing or disturbing each other.'),
   strands: [{
-    id: 'main',
+    id: 'main', title: e('Isolation', 'Isolation'),
     chapters: [
       {
         id: 'waende', title: e('Abschottung und Limits', 'Isolation and limits'),
@@ -57,6 +58,25 @@ const topic: Topic = {
           { id: 'gesamt', title: 'Alles zusammen', summary: e('Ein Befehl durch das ganze System, und wie man alles am echten Rechner nachprüft.', 'One command through the whole system, and how to check everything on a real machine.'), slides: [
             { title: 'Ein Befehl, das ganze System', view: <RunSummary /> },
             { title: 'Alles am echten System nachprüfen', view: <ProofMap /> },
+          ] },
+        ],
+      },
+    ],
+  }, {
+    id: 'images', title: e('Images absichern', 'Securing images'),
+    chapters: [
+      {
+        id: 'luecken', title: e('Sicherheitslücken in Images', 'Vulnerabilities in images'),
+        blurb: e('Was in einem Image steckt, was eine bekannte Lücke anrichten kann, wie ein Scanner sie findet und wie ihr den Schaden klein haltet.', 'What is inside an image, what a known vulnerability can do, how a scanner finds it and how you keep the damage small.'),
+        pages: [
+          { id: 'gefahr', title: e('Die Gefahr', 'The danger'), summary: e('Fremder Code im Image und was ein Angreifer damit macht.', 'Foreign code in the image and what an attacker does with it.'), slides: [
+            { title: e('Was alles in einem Image steckt', 'What is inside an image'), view: <InImage /> },
+            { title: e('Was eine Lücke anrichten kann', 'What a vulnerability can do'), view: <Attack /> },
+          ] },
+          { id: 'schutz', title: e('Schutz', 'Protection'), summary: e('Lücken finden, Angriffsfläche verkleinern, dranbleiben.', 'Find holes, shrink the attack surface, stay on top.'), slides: [
+            { title: e('Lücken finden: Images scannen', 'Finding holes: scanning images'), view: <Scan /> },
+            { title: e('Wenig im Image, wenig Schaden', 'Little in the image, little damage'), view: <Harden /> },
+            { title: e('Scannen und neu bauen', 'Scan and rebuild'), view: <Rebuild /> },
           ] },
         ],
       },

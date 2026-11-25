@@ -6,8 +6,8 @@ const quiz: Record<string, Task[]> = {
     choice(e('Ein Container schreibt eine Logdatei. Wo landet sie?', 'A container writes a log file. Where does it end up?'), [
       e('Im Image, für alle Container', 'In the image, for all containers'), e('In der eigenen Schreibschicht des Containers', 'In the container’s own writable layer'), e('Nirgends, Container können nicht schreiben', 'Nowhere, containers cannot write'),
     ], 1, e('Das Image bleibt nur lesbar. Jeder Container schreibt in seine eigene Schicht, die mit docker rm verschwindet.', 'The image stays read-only. Each container writes into its own layer, which disappears with docker rm.')),
-    order(e('Von unten nach oben: Wie ist das Image der api geschichtet?', 'From bottom to top: how is the api image layered?'), [e('Linux-Basis mit JDK 21', 'Linux base with JDK 21'), 'app.jar', e('Startbefehl als Metadaten', 'start command as metadata')],
-      e('Jede Zeile des Dockerfiles legt eine Schicht auf die vorige. Die Basis liegt unten.', 'Each line of the Dockerfile puts a layer on top of the previous one. The base is at the bottom.')),
+    order(e('Von unten nach oben: Wie ist das Image der api geschichtet?', 'From bottom to top: how is the api image layered?'), [e('Linux-Basis mit Java 21 (JRE)', 'Linux base with Java 21 (JRE)'), 'app.jar', e('Startbefehl als Metadaten', 'start command as metadata')],
+      e('FROM und COPY legen Schichten übereinander, die Basis liegt unten. CMD ist keine Schicht, sondern ein Eintrag in den Metadaten.', 'FROM and COPY stack layers on top of each other, the base at the bottom. CMD is not a layer but an entry in the metadata.')),
     choice(e('Was bedeutet der Tag latest?', 'What does the tag latest mean?'), [
       e('Immer die neueste Version', 'Always the newest version'), e('Nur der Standard-Tag, wenn keine Version angegeben ist', 'Only the default tag when no version is given'), e('Eine geprüfte, stabile Version', 'A tested, stable version'),
     ], 1, e('latest ist ein ganz normaler Tag. Wer ihn vergibt, entscheidet, worauf er zeigt. Für Abgaben besser eine feste Version.', 'latest is an ordinary tag. Whoever sets it decides what it points to. For hand-ins, better use a fixed version.')),
@@ -16,6 +16,11 @@ const quiz: Record<string, Task[]> = {
     ], e('Aus dem Dockerfile baut ihr das Image, es liegt lokal auf dem Rechner und wird über eine Registry geteilt.', 'From the Dockerfile you build the image, it lives locally on the machine and is shared through a registry.')),
   ],
   'holen-bauen': [
+    order(e('Bringe die Schritte in die richtige Reihenfolge, um ein lokales Image auf den Server zu bringen.', 'Put the steps in order to get a local image onto the server.'), ['docker tag mensa-api:1.1 ghcr.io/team/mensa-api:1.1', 'docker login ghcr.io', 'docker push ghcr.io/team/mensa-api:1.1', 'docker pull ghcr.io/team/mensa-api:1.1'],
+      e('Erst den Namen mit Registry vergeben, dann anmelden, hochladen und auf dem Server holen.', 'First give the name with the registry, then log in, upload and fetch it on the server.'), { code: true, swap: [[0, 1]] }),
+    choice(e('Ein auf dem Mac mit Apple-Chip gebautes Image endet auf dem Server sofort mit „exec format error“. Warum?', 'An image built on a Mac with an Apple chip ends on the server at once with “exec format error”. Why?'), [
+      e('Die app.jar ist beschädigt', 'The app.jar is broken'), e('Das Image enthält Maschinencode für arm64, der Server hat eine amd64-CPU', 'The image contains machine code for arm64, the server has an amd64 CPU'), e('Der Server hat zu wenig Speicher', 'The server has too little memory'),
+    ], 1, e('Java und das Basis-Image sind Maschinencode für eine CPU. Abhilfe: docker buildx build --platform linux/amd64.', 'Java and the base image are machine code for one CPU. Fix: docker buildx build --platform linux/amd64.')),
     choice(e('docker build -t mensa-api:1.0 . – wofür steht der Punkt am Ende?', 'docker build -t mensa-api:1.0 . – what does the dot at the end stand for?'), [
       e('Für den Ordner, der an den Daemon geschickt wird', 'For the folder that is sent to the daemon'), e('Für das Ende des Befehls', 'For the end of the command'), e('Für die neueste Version', 'For the newest version'),
     ], 0, e('Der Punkt ist der Build-Kontext: dieser Ordner geht an dockerd, nur daraus kann COPY Dateien holen.', 'The dot is the build context: this folder is sent to dockerd, COPY can only take files from it.')),

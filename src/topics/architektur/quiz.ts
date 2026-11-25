@@ -17,7 +17,7 @@ const quiz: Record<string, Task[]> = {
       e('Weil jeder Container eine eigene VM bekommt', 'Because every container gets a VM of its own'),
     ], 0, e('Container teilen sich den Kernel. Auf dem Mac gibt es keinen Linux-Kernel, also bringt Docker Desktop einen in einer VM mit.', 'Containers share the kernel. A Mac has no Linux kernel, so Docker Desktop brings one in a VM.')),
     order(e('Wie lebt ein Container? Sortiere.', 'How does a container live? Sort.'), [e('anlegen', 'create'), e('starten', 'start'), e('anhalten', 'stop'), e('entfernen', 'remove')],
-      e('Angehalten ist nicht gelöscht. Erst docker rm entfernt den Container.', 'Stopped is not removed. Only docker rm removes the container.')),
+      e('Gestoppt ist nicht gelöscht. Erst docker rm entfernt den Container.', 'Stopped is not removed. Only docker rm removes the container.')),
   ],
   'betriebssystem': [
     figure(e('Ergänze die zwei fehlenden Schichten unter den Containern.', 'Fill in the two missing layers below the containers.'), stacks({

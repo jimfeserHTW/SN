@@ -31,7 +31,7 @@ export const Uses = () => (
 )
 
 /* ── from Dockerfile to image ── */
-const steps = [e('1  Nimm ein Linux mit JDK 21', '1  Take a Linux with JDK 21'), e('2  Lege app.jar hinein', '2  Put app.jar inside'), e('3  Merke dir Port 8080', '3  Note port 8080'), e('4  Start: java -jar app.jar', '4  Start: java -jar app.jar')]
+const steps = [e('1  Nimm ein Linux mit Java 21 (JRE)', '1  Take a Linux with Java 21 (JRE)'), e('2  Lege app.jar hinein', '2  Put app.jar inside'), e('3  Merke dir Port 8080', '3  Note port 8080'), e('4  Start: java -jar app.jar', '4  Start: java -jar app.jar')]
 export const PackingList = () => (
   <div className="dg-col">
     <Svg w={1000} h={330} label={e('Ein Dockerfile wird Zeile für Zeile zu einem Image gebaut', 'A Dockerfile is built into an image line by line')}>
@@ -45,7 +45,7 @@ export const PackingList = () => (
       <In i={5}><Txt x={483} y={130} size={15} w={700} fill="var(--ink)" anchor="middle">{e('bauen', 'build')}</Txt><Txt x={483} y={170} size={13} anchor="middle">docker build</Txt></In>
       <Plan x={590} y={70} w={150} h={100} i={6} />
       <Tag x={760} y={74} w={220} label="Image" sub="mensa-api:1.0" tone="blue" i={6} />
-      <Tag x={590} y={200} w={390} label={e('Jede Zeile wird zu einer Schicht im Image', 'Every line becomes a layer in the image')} sub={e('Mehr dazu im Thema Images', 'More on this in the topic Images')} i={7} />
+      <Tag x={590} y={200} w={390} label={e('Zeilen mit Dateien werden zu Schichten', 'Lines with files become layers')} sub={e('Mehr dazu im Thema Images', 'More on this in the topic Images')} i={7} />
     </Svg>
     <Take i={8} label={e('Merke', 'Remember')} text={e('Das Dockerfile schreibt ihr einmal. Daraus baut Docker ein Image, aus dem beliebig viele gleiche Container entstehen.', 'You write the Dockerfile once. Docker builds an image from it, and any number of identical containers come from that.')} />
   </div>
@@ -101,13 +101,13 @@ export const Sealed = () => (
 
 /* ── layer by layer: one line of the Dockerfile, one layer ── */
 const layers: [string, string, string][] = [
-  ['FROM eclipse-temurin:21-jre', e('Schicht 1 · Linux-Basis mit JDK 21', 'layer 1 · Linux base with JDK 21'), 'var(--c-kernel)'],
+  ['FROM eclipse-temurin:21-jre', e('Basis-Schichten · Linux mit Java 21 (JRE)', 'base layers · Linux with Java 21 (JRE)'), 'var(--c-kernel)'],
   ['COPY target/app.jar /app.jar', e('Schicht 2 · eure app.jar', 'layer 2 · your app.jar'), 'var(--svc-api)'],
   ['CMD ["java", "-jar", "/app.jar"]', e('Metadaten: so wird gestartet', 'metadata: how to start'), 'var(--ink-3)'],
 ]
 export const Layers = () => (
   <div className="dg-col">
-    <Svg w={1000} h={340} label={e('Jede Zeile des Dockerfiles wird zu einer Schicht im Image', 'Every line of the Dockerfile becomes a layer in the image')}>
+    <Svg w={1000} h={340} label={e('FROM und COPY werden zu Schichten im Image, CMD nur zu einem Eintrag in den Metadaten', 'FROM and COPY become layers in the image, CMD only an entry in the metadata')}>
       <Tag x={20} y={0} w={420} label="Dockerfile" sub={e('die Bauanleitung', 'the build instructions')} tone="sky" />
       <Tag x={540} y={0} w={440} label={e('Image aus Schichten', 'Image made of layers')} sub="mensa-api:1.0" tone="sky" i={3} />
       {layers.map(([code, label, color], k) => {
@@ -121,7 +121,7 @@ export const Layers = () => (
         )
       })}
     </Svg>
-    <Take i={4} label={e('Merke', 'Remember')} text={e('Ein Image ist ein Stapel aus Schichten, unten die Basis, oben eure App. Jede Schicht kommt aus einer Zeile des Dockerfiles.', 'An image is a stack of layers, the base at the bottom, your app on top. Each layer comes from one line of the Dockerfile.')} />
+    <Take i={4} label={e('Merke', 'Remember')} text={e('Ein Image ist ein Stapel aus Schichten, unten die Basis, oben eure App. Schichten entstehen aus Zeilen, die Dateien ändern (FROM, COPY, RUN). Zeilen wie CMD oder EXPOSE sind nur Notizen im Image.', 'An image is a stack of layers, the base at the bottom, your app on top. Layers come from lines that change files (FROM, COPY, RUN). Lines like CMD or EXPOSE are only notes in the image.')} />
   </div>
 )
 
@@ -148,7 +148,7 @@ export const Labels = () => (
 export const Shared = () => (
   <div className="dg-col">
     <Svg w={1000} h={350} label={e('Zwei Versionen teilen sich die Basis-Schicht, nur die App-Schicht ist neu', 'Two versions share the base layer, only the app layer is new')}>
-      <In i={0}><rect x={140} y={230} width={720} height={56} rx={10} fill="color-mix(in srgb, var(--c-kernel) 18%, #fff)" stroke="var(--c-kernel)" strokeWidth={2} /><Txt x={500} y={264} size={15} w={700} fill="var(--ink)" anchor="middle">{e('Schichten der Basis · Linux mit JDK 21 · rund 95 MB · nur einmal auf dem Rechner', 'base layers · Linux with JDK 21 · about 95 MB · only once on the machine')}</Txt></In>
+      <In i={0}><rect x={140} y={230} width={720} height={56} rx={10} fill="color-mix(in srgb, var(--c-kernel) 18%, #fff)" stroke="var(--c-kernel)" strokeWidth={2} /><Txt x={500} y={264} size={15} w={700} fill="var(--ink)" anchor="middle">{e('Schichten der Basis · Linux mit Java 21 (JRE) · rund 95 MB · nur einmal auf dem Rechner', 'base layers · Linux with Java 21 (JRE) · about 95 MB · only once on the machine')}</Txt></In>
       <In i={1}><rect x={140} y={150} width={340} height={56} rx={10} fill="color-mix(in srgb, var(--svc-api) 18%, #fff)" stroke="var(--svc-api)" strokeWidth={2} /><Txt x={310} y={184} size={15} w={700} fill="var(--ink)" anchor="middle">{e('app.jar 1.0 · 40 MB', 'app.jar 1.0 · 40 MB')}</Txt></In>
       <In i={2}><rect x={520} y={150} width={340} height={56} rx={10} fill="color-mix(in srgb, var(--svc-api) 18%, #fff)" stroke="var(--svc-api)" strokeWidth={2} strokeDasharray="7 5" /><Txt x={690} y={184} size={15} w={700} fill="var(--ink)" anchor="middle">{e('app.jar 1.1 · 40 MB · neu', 'app.jar 1.1 · 40 MB · new')}</Txt></In>
       <Tag x={140} y={60} w={340} label="mensa-api:1.0" sub={e('schon auf dem Rechner', 'already on the machine')} i={1} />

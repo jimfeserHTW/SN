@@ -2,7 +2,7 @@ import type { Topic } from '../../components/types.ts'
 import { e } from '../../components/quizModel.ts'
 import { Anatomy, Variables, Merge, StartOrder, Everyday, Pitfalls, UpFlow, ServiceMap, StartCommand, RestartGrid, Health, DependsGantt, VarWinner, Secrets, Profiles, Watch, DebugPath, Summary, Interp, MergeRules, Anchors, FileWays, ProjectLabels, Recreate, BigProject } from './diagrams.tsx'
 import { ServiceCard, Waybills, Sources, TwoTrips, Envelope, OnDemand, Crew, Sticker, Compare, Restart, Logbook, LiveSync } from './views.tsx'
-import { SpringEnv, Deploy, ConfigView } from './tech.tsx'
+import { SpringEnv, Deploy, ConfigView, DockerfileHealth } from './tech.tsx'
 
 const known = ['container', 'images', 'registry', 'client', 'daemon', 'port', 'net', 'volumes', 'ns', 'cgroups'] as const
 import { TechMap } from '../../components/harbor/techmap.tsx'
@@ -112,6 +112,7 @@ const topic: Topic = {
             { id: 'start', title: 'Start und Reihenfolge', summary: 'Wann ein Service bereit ist und wer auf wen wartet.', slides: [
               { title: 'Startreihenfolge: gestartet ist nicht bereit', view: <StartOrder /> },
               { title: 'Healthcheck: Wann ist ein Service bereit?', view: <Health /> },
+              { title: e('HEALTHCHECK im Dockerfile oder in der compose.yaml', 'HEALTHCHECK in the Dockerfile or in compose.yaml'), view: <DockerfileHealth /> },
               { title: 'Wer wartet auf wen?', view: <DependsGantt /> },
               { title: 'Typische Stolpersteine', view: <Pitfalls /> },
               { title: e('Technikkarte: das Bild bis hierher', 'Technical map: the picture so far'), view: <TechMap known={['client', 'container', 'images', 'registry', 'net', 'port', 'volumes']} focus={['compose', 'daemon']} /> },

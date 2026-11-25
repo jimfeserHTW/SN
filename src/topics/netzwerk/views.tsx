@@ -7,37 +7,6 @@ import { Box, Tag, Lead, Mark, In, Txt, Go, type Svc } from '../../components/ha
 const host = (y: number, h: number, i = 0) => <Zone x={20} y={y} w={960} h={h} label={e('Dein Rechner', 'Your machine')} sub="Docker" i={i} />
 const plate = (x: number, y: number, text: string, i: number) => <In i={i}><rect x={x - 54} y={y} width={108} height={24} rx={6} fill="#fff" stroke="var(--blue)" strokeWidth={1.5} /><text x={x} y={y + 17} textAnchor="middle" fontSize={13} fontWeight={700} fill="var(--blue-deep)" style={{ fontFamily: 'var(--mono)' }}>{text}</text></In>
 
-/* ── a published port: only the frontend is reachable from outside ── */
-const lock = (x: number, y: number, i: number) => (
-  <In i={i}><rect x={x - 9} y={y} width={18} height={14} rx={3} fill="var(--keel)" /><path d={`M${x - 5} ${y} v-5 a5 5 0 0 1 10 0 v5`} fill="none" stroke="var(--keel)" strokeWidth={2.5} /></In>
-)
-const pub: [Svc, number, string][] = [['frontend', 320, '80'], ['api', 540, '8080'], ['db', 760, '5432']]
-export const Published = () => (
-  <div className="dg-col">
-    <Svg w={1000} h={370} label={e('Der Browser erreicht über Port 8080 des Rechners Port 80 im frontend. api und db haben keinen veröffentlichten Port und sind nur im Netz unter Name und Port erreichbar.', 'The browser reaches port 80 in the frontend via port 8080 of the machine. api and db have no published port and are reachable only in the network by name and port.')}>
-      <Zone x={160} y={60} w={820} h={300} label={e('Dein Rechner', 'Your machine')} sub="Docker" />
-      <In i={1}><Icon name="browser" x={30} y={148} s={64} /><Txt x={62} y={232} size={13} w={700} anchor="middle">Browser</Txt></In>
-      <B x={140} y={155} w={110} h={50} t="ok" label=":8080" mono size={16} i={2} />
-      <Arrow d="M96 180 H136" kind="ok" i={2} />
-      <Arrow d="M252 180 H316" kind="ok" i={2} />
-      {pub.map(([s, x, port], k) => (
-        <g key={s}>
-          <Box x={x} y={150} w={170} h={60} svc={s} i={k ? 3 : 2} />
-          <Wire d={`M${x + 85} 212 V290`} i={4} />
-          <Label x={x + 93} y={256} anchor="start" size={14} weight={700} mono tone="blue" i={4}>{`${s}:${port}`}</Label>
-        </g>
-      ))}
-      {lock(625, 128, 3)}{lock(845, 128, 3)}
-      <B x={320} y={290} w={610} h={44} t="libs" label={e('gemeinsames Netz: drinnen erreichbar über Name:Port', 'shared network: reachable inside by name:port')} size={14} i={4} />
-      <Tag x={100} y={0} w={330} label={'ports: ["8080:80"]'} sub={e('Rechner 8080 → frontend:80', 'machine 8080 → frontend:80')} tone="ok" i={2} />
-      <Lead d="M150 46 V150" end={[150, 154]} i={2} />
-      <Tag x={560} y={0} w={400} label={e('kein ports-Eintrag', 'no ports entry')} sub={e('api und db: nur aus dem Netz erreichbar', 'api and db: reachable only from the network')} tone="sand" i={3} />
-      <Lead d="M735 46 V120" end={[735, 124]} i={3} />
-    </Svg>
-    <Take i={5} label={e('Merke', 'Remember')} text={e('Von außen kommt man nur über einen veröffentlichten Port hinein, in der compose.yaml steht er unter ports. Was keinen hat, erreichen nur die anderen Container im Netz, zum Beispiel die api unter db:5432.', 'From outside you only get in through a published port, in compose.yaml it is listed under ports. Whatever has none is reachable only by the other containers in the network, for example the api at db:5432.')} />
-  </div>
-)
-
 /* ── every container has its own IP ── */
 export const OwnLine = () => (
   <div className="dg-col">
@@ -131,6 +100,6 @@ export const HostCall = () => (
       <Tag x={380} y={0} w={290} label={e('Der Container ruft den Rechner', 'The container calls the machine')} sub={e('über einen festen Namen', 'via a fixed name')} tone="blue" i={2} />
       <Tag x={700} y={0} w={280} label={e('Unter Linux: freischalten', 'On Linux: switch it on')} sub="host.docker.internal:host-gateway" tone="sand" i={3} />
     </Svg>
-    <Take i={4} label={e('Merke', 'Remember')} text={e('localhost bleibt im Container. Wer den eigenen Rechner erreichen will, nutzt host.docker.internal.', 'localhost stays inside the container. To reach your own machine, use host.docker.internal.')} />
+    <Take i={4} label={e('Merke', 'Remember')} text={e('localhost bleibt im Container. Wer den eigenen Rechner erreichen will, nutzt host.docker.internal. Unter Linux muss das Programm dafür auch auf der Docker-Bridge lauschen, nicht nur auf localhost: bei Postgres listen_addresses und ein Eintrag in pg_hba.conf.', 'localhost stays inside the container. To reach your own machine, use host.docker.internal. On Linux the program must then also listen on the Docker bridge, not only on localhost: for Postgres listen_addresses and an entry in pg_hba.conf.')} />
   </div>
 )

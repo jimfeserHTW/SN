@@ -1,195 +1,345 @@
 import type { ReactNode } from 'react'
-import { Svg, Take, Num, Box as B, Zone, Ctr, Arrow, Label, Wire, Tick } from '../../components/Svg.tsx'
+import { Svg, Take, Num, Box as B, Zone, Arrow, Label, Wire, Tick } from '../../components/Svg.tsx'
 import { Code } from '../../components/Code.tsx'
+import { Icon } from '../../components/Icons.tsx'
 import { e } from '../../components/quizModel.ts'
-import { Box, Tag, Lead, Mark, Sheet, In, Txt, Go, type Svc } from '../../components/harbor/harbor.tsx'
+import { Box, Tag, Mark, Sheet, In, Txt, Go, type Svc } from '../../components/harbor/harbor.tsx'
 
 // Einführung in Docker Compose: the Mensa-App needs three containers on ONE machine.
 // Technical terms, abstract graphics. Compose runs one machine, never a cluster. Only the last slide shows commands.
-const trio: [Svc, number][] = [['frontend', 110], ['api', 420], ['db', 730]]
-const host = (y: number, h: number, i = 0) => <Zone x={20} y={y} w={960} h={h} label={e('Dein Rechner', 'Your machine')} sub="Docker" i={i} />
 
-/* ── ① 1 · the app grows: three containers that need each other ── */
-export const Grows = () => (
-  <div className="dg-col">
-    <Svg w={1000} h={330} label={e('Drei Container der Mensa-App auf einem Rechner, jeder mit eigenen Bedürfnissen', 'Three containers of the Mensa-App on one machine, each with needs of its own')}>
-      {host(170, 150)}
-      {trio.map(([s, x], k) => <Box key={s} x={x + 5} y={222} w={150} h={60} svc={s} i={1 + k} />)}
-      <Go d="M269 252 H421" i={4} /><Go d="M579 252 H731" i={4} />
-      <In i={4}><Txt x={345} y={240} size={12.5} anchor="middle">{e('ruft', 'calls')}</Txt><Txt x={655} y={240} size={12.5} anchor="middle">{e('liest und schreibt', 'reads and writes')}</Txt></In>
-      <Tag x={75} y={40} w={230} label="Vue-Frontend" sub={e('Port 8080 nach außen', 'port 8080 to the outside')} i={1} />
-      <Tag x={385} y={40} w={230} label="Spring-Boot-API" sub={e('braucht DB_HOST und Passwort', 'needs DB_HOST and a password')} i={2} />
-      <Tag x={695} y={40} w={230} label="Postgres" sub={e('braucht Passwort und ein Volume', 'needs a password and a volume')} i={3} />
-      <Lead d="M190 86 V218" end={[190, 220]} i={1} /><Lead d="M500 86 V218" end={[500, 220]} i={2} /><Lead d="M810 86 V218" end={[810, 220]} i={3} />
-    </Svg>
-    <Take i={5} label={e('Merke', 'Remember')} text={e('Eine App, drei Container. Jeder braucht seine Einstellungen, und alle müssen einander finden.', 'One app, three containers. Each needs its settings, and they all have to find each other.')} />
-  </div>
+// The colour key of the backend is still 'api' in the drawing kit; in the intro the service is called backend.
+const name = (s: Svc) => (s === 'api' ? 'backend' : s)
+
+/* ── ① 1 · three containers by hand: what is missing sits in the command line and where it breaks ── */
+const mono = { fontFamily: 'var(--mono)', fontVariantLigatures: 'none', whiteSpace: 'pre' } as const
+const runs: [string, string[]][] = [
+  ['docker run -d --name backend -e DB_HOST=db mensa-backend', ['--network ?']],
+  ['docker run -d --name frontend mensa-frontend', ['-p 8080:80 ?', '--network ?']],
+  ['docker run -d --name db -e POSTGRES_PASSWORD=geheim -v dbdata:/var/lib/postgresql postgres:18', ['--network ?']],
+]
+// services left to right, with their start order (backend was typed first)
+const started: [Svc, string, number, number][] = [['frontend', 'frontend', 180, 2], ['api', 'backend', 480, 1], ['db', 'db', 780, 3]]
+const broken = (x1: number, x2: number, i: number, label?: string) => (
+  <>
+    <In i={i}><path d={`M${x1} 258 H${x2}`} stroke="var(--bad)" strokeWidth={2.4} strokeDasharray="7 5" fill="none" markerEnd="url(#ah-bad)" /></In>
+    <Mark x={(x1 + x2) / 2 + (label ? 0 : 20)} y={236} bad r={10} i={i} />
+    {label && <In i={i}><Txt x={(x1 + x2) / 2} y={282} size={12} w={700} fill="var(--bad)" anchor="middle">{label}</Txt></In>}
+  </>
 )
-
-/* ── ① 2 · three containers by hand ── */
-const runs = [
-  'docker run -d --name api -e DB_HOST=db -e DB_PASSWORD=geheim mensa-api:1.0',
-  'docker run -d --name frontend mensa-frontend:1.0',
-  'docker run -d --name db -e POSTGRES_PASSWORD=geheim -v dbdata:/var/lib/postgresql postgres:18',
-]
-const fails: [Svc, number, string, string, 'bad' | 'sand'][] = [
-  ['api', 110, e('startet zuerst', 'starts first'), e('findet keine Datenbank', 'finds no database'), 'bad'],
-  ['frontend', 420, e('-p vergessen', '-p forgotten'), e('von außen nicht erreichbar', 'unreachable from outside'), 'bad'],
-  ['db', 730, e('startet zuletzt', 'starts last'), e('und kein gemeinsames Netz', 'and no shared network'), 'sand'],
-]
 export const ByHand = () => (
   <div className="dg-col">
-    <Svg w={1000} h={372} label={e('Drei lange docker-run-Befehle von Hand. Die Container starten in falscher Reihenfolge, ohne Port und ohne gemeinsames Netz.', 'Three long docker run commands by hand. The containers start in the wrong order, without a port and without a shared network.')}>
+    <Svg w={1000} h={372} label={e('Drei docker-run-Befehle von Hand. Es fehlen ein gemeinsames Netz und der Port für das frontend, und das backend startet vor der Datenbank.', 'Three docker run commands by hand. A shared network and the port for the frontend are missing, and the backend starts before the database.')}>
       <In i={0}>
-        <rect x={20} y={0} width={960} height={130} rx={14} fill="var(--ink)" />
-        <Txt x={40} y={24} size={12.5} w={700} fill="#9fb0c8">Terminal</Txt>
+        <rect x={0} y={0} width={1000} height={142} rx={14} fill="var(--ink)" />
+        <Txt x={20} y={24} size={12.5} w={700} fill="#9fb0c8">Terminal</Txt>
+        <Txt x={980} y={24} size={12.5} fill="#9fb0c8" anchor="end">{e('von Hand, bei jedem Start, bei jedem im Team', 'by hand, at every start, for everyone in the team')}</Txt>
       </In>
-      {runs.map((r, k) => (
-        <In key={k} i={1 + k}>
-          <Num n={k + 1} x={52} y={48 + k * 30} />
-          <text x={74} y={53 + k * 30} fontSize={13.5} fill="#fff" style={{ fontFamily: 'var(--mono)' }}>{r}</text>
-        </In>
-      ))}
-      <Arrow d="M500 134 V168" i={1} />
-      {host(172, 196, 1)}
-      {fails.map(([s, x, l, sub, tone], k) => (
+      {runs.map(([cmd, miss], k) => {
+        const y = 54 + k * 34
+        let x = 52 + cmd.length * 8.1 + 14
+        return (
+          <g key={k}>
+            <Num n={k + 1} x={30} y={y - 5} i={1 + k} />
+            <In i={1 + k}>
+              <text x={52} y={y} fontSize={13.5} fill="#fff" style={mono}>{cmd}</text>
+              {miss.map(m => {
+                const w = m.length * 7.5 + 20, cx = x
+                x += w + 8
+                return (
+                  <g key={m}>
+                    <rect x={cx} y={y - 17} width={w} height={24} rx={6} fill="rgba(192, 57, 43, .22)" stroke="#fca5a5" strokeWidth={1.5} strokeDasharray="4 3" />
+                    <text x={cx + w / 2} y={y} fontSize={12.5} fontWeight={700} fill="#fca5a5" textAnchor="middle" style={mono}>{m}</text>
+                  </g>
+                )
+              })}
+            </In>
+          </g>
+        )
+      })}
+      <In i={1}>
+        <rect x={120} y={170} width={880} height={196} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
+        <Txt x={136} y={193} size={14} w={700} fill="var(--ink-2)">{e('Dein Rechner', 'Your machine')}</Txt>
+        <Txt x={984} y={193} size={13} fill="var(--ink-3)" anchor="end">Docker</Txt>
+        <Icon name="browser" x={18} y={226} s={56} />
+        <Txt x={46} y={302} size={13} w={700} anchor="middle">Browser</Txt>
+      </In>
+      {started.map(([s, label, x, n]) => (
         <g key={s}>
-          <Box x={x + 5} y={210} w={150} h={60} svc={s} i={1 + k} />
-          <Num n={k + 1} x={x + 5} y={210} i={1 + k} />
-          <Mark x={x + 155} y={210} bad={tone === 'bad'} i={1 + k} />
-          <Tag x={x - 35} y={300} w={230} label={l} sub={sub} tone={tone} i={1 + k} />
+          <Num n={n} x={x + 85} y={208} i={n} />
+          <Box x={x} y={228} w={170} h={60} svc={s} label={label} i={n} />
         </g>
       ))}
+      {broken(82, 171, 4)}
+      {broken(356, 471, 4, e('Name unbekannt', 'name unknown'))}
+      {broken(656, 771, 4, e('Name unbekannt', 'name unknown'))}
+      <Tag x={150} y={304} w={230} label={e('kein -p 8080:80', 'no -p 8080:80')} sub={e('der Browser erreicht es nicht', 'the browser cannot reach it')} tone="bad" i={5} />
+      <Tag x={450} y={304} w={230} label="UnknownHostException: db" sub={e('kein gemeinsames Netz', 'no shared network')} tone="bad" i={5} />
+      <Tag x={750} y={304} w={230} label={e('startet als Letztes', 'starts last')} sub={e('das backend hat nicht gewartet', 'the backend did not wait')} tone="sand" i={5} />
     </Svg>
-    <Take i={5} label={e('Ursache', 'Cause')} text={e('Jeder Container wird einzeln von Hand gestartet. Reihenfolge, Namen, Ports und Netz müssen bei jedem Start stimmen, bei jedem im Team.', 'Every container is started by hand, one by one. Order, names, ports and network have to be right at every start, for everyone in the team.')} />
+    <Take i={6} label={e('Merke', 'Remember')} text={e('Drei Befehle, drei Fehlerquellen: Netz, Port und Reihenfolge müssen bei jedem Start und bei jedem im Team stimmen.', 'Three commands, three sources of error: network, port and order have to be right at every start and for everyone in the team.')} />
   </div>
 )
 
-/* ── ① 3 · compose.yaml: one file for all three containers ── */
-const planRows: [Svc, string][] = [
-  ['frontend', e('Port 8080 nach außen', 'port 8080 to the outside')],
-  ['api', e('DB_HOST = db · wartet auf db', 'DB_HOST = db · waits for db')],
-  ['db', e('Volume für die Daten', 'a volume for the data')],
+/* ── ① 2 · one compose.yaml for the whole team: each failure of the slide before is solved in one line ── */
+const yaml: [string, string?][] = [
+  ['services:'], ['  frontend:'], ['    build: ./frontend   # selbst bauen'], ['    ports: ["8080:80"]', e('✓ Port', '✓ port')],
+  ['  backend:'], ['    build: ./backend    # selbst bauen'], ['    environment:'], ['      DB_HOST: db'], ['    depends_on: [db]', e('✓ Reihenfolge', '✓ order')],
+  ['  db:'], ['    image: postgres:18  # vom Docker Hub'], ['    expose: ["5432"]      # nur im Netz'], ['    volumes: [dbdata:/var/lib/postgresql]'], ['volumes: { dbdata: }'],
 ]
-const File = ({ x, y, i = 0 }: { x: number; y: number; i?: number }) => (
-  <g>
-    <In i={i}>
-      <rect x={x} y={y} width={340} height={250} rx={14} fill="#fff3d6" stroke="var(--keel)" strokeWidth={2} />
-      <text x={x + 22} y={y + 42} fontSize={18} fontWeight={700} fill="var(--ink)" style={{ fontFamily: 'var(--mono)' }}>compose.yaml</text>
-      <Txt x={x + 318} y={y + 42} size={13} fill="#8a6a20" anchor="end">{e('im Repo', 'in the repo')}</Txt>
-    </In>
-    {planRows.map(([s, note], k) => (
-      <In key={s} i={i + 1 + k}>
-        <rect x={x + 18} y={y + 62 + k * 60} width={304} height={50} rx={9} fill="#fff" stroke="var(--land-d)" strokeWidth={1.5} />
-        <rect x={x + 28} y={y + 72 + k * 60} width={84} height={30} rx={6} fill={`var(--svc-${s})`} />
-        <Txt x={x + 70} y={y + 92 + k * 60} size={13.5} w={700} fill="#fff" anchor="middle">{s}</Txt>
-        <Txt x={x + 122} y={y + 92 + k * 60} size={12.5}>{note}</Txt>
-      </In>
-    ))}
-  </g>
-)
-export const LoadingPlan = () => (
+// e() hands back the German text; w must fit the longer of both languages
+const pill = (x: number, y: number, label: string, i: number, w = label.length * 7.4 + 22) => {
+  return <In i={i}><rect x={x - w} y={y - 15} width={w} height={22} rx={11} fill="#e2f5ec" stroke="var(--ok)" strokeWidth={1.5} /><Txt x={x - w / 2} y={y + 1} size={12.5} w={700} fill="var(--ok)" anchor="middle">{label}</Txt></In>
+}
+const team = [e('Lenas Laptop · macOS', 'Lena’s laptop · macOS'), e('Tims Laptop · Windows', 'Tim’s laptop · Windows'), e('Abgabe-Server · Linux', 'Hand-in server · Linux')]
+export const ComposeFile = () => (
   <div className="dg-col">
-    <Svg w={1000} h={340} label={e('Eine compose.yaml beschreibt alle drei Container. Ein Befehl, und alle laufen verbunden auf dem Rechner.', 'One compose.yaml describes all three containers. One command, and all of them run connected on the machine.')}>
-      <File x={20} y={40} />
-      <Arrow d="M366 165 H446" i={4} />
-      <Label x={406} y={150} size={12.5} mono weight={700} i={4}>compose up</Label>
-      <Zone x={450} y={110} w={530} h={200} label={e('Dein Rechner', 'Your machine')} sub="Docker" i={5} />
-      {(['frontend', 'api', 'db'] as Svc[]).map((s, k) => (
-        <g key={s}>
-          <Box x={476 + k * 168} y={160} w={140} h={54} svc={s} size={14} i={5} />
-          <Wire d={`M${546 + k * 168} 216 V254`} i={6} />
-        </g>
-      ))}
-      <B x={476} y={254} w={476} h={40} t="libs" label={e('gemeinsames Netz', 'shared network')} size={14} i={6} />
-      <Tag x={470} y={20} w={490} label={e('alle gestartet, richtig verbunden', 'all started, wired up right')} sub={e('in der richtigen Reihenfolge, mit Port und Volume', 'in the right order, with port and volume')} tone="ok" i={7} />
-    </Svg>
-    <Take i={8} label={e('Merke', 'Remember')} text={e('Was ihr sonst bei jedem Start von Hand eintippt, steht einmal in der compose.yaml. Compose liest sie und startet alles richtig.', 'What you would otherwise type by hand at every start is written once in compose.yaml. Compose reads it and starts everything right.')} />
-  </div>
-)
-
-/* ── ① 4 · one compose.yaml for the whole team ── */
-const machines: { x: number; y: number; name: string }[] = [
-  { x: 10, y: 30, name: e('Lena · macOS', 'Lena · macOS') }, { x: 650, y: 30, name: e('Tim · Windows', 'Tim · Windows') },
-  { x: 10, y: 240, name: e('Ali · Linux', 'Ali · Linux') }, { x: 650, y: 240, name: e('Server · Linux', 'Server · Linux') },
-]
-export const Team = () => (
-  <div className="dg-col">
-    <Svg w={1000} h={370} label={e('Eine compose.yaml im Repo, vier Rechner mit denselben drei Containern', 'One compose.yaml in the repo, four machines with the same three containers')}>
-      {machines.map((m, k) => (
-        <g key={m.name}>
-          <Zone x={m.x} y={m.y} w={340} h={110} label={m.name} i={k + 1} />
-          {(['frontend', 'api', 'db'] as Svc[]).map((v, j) => <Box key={v} x={m.x + 28 + j * 98} y={m.y + 46} w={88} h={44} svc={v} size={13} i={k + 1} />)}
-          <Mark x={m.x + 316} y={m.y + 20} ok i={k + 1} r={12} />
-        </g>
-      ))}
+    <Svg w={1000} h={372} label={e('Links die compose.yaml mit Port, Startreihenfolge und automatischem Netz. Rechts drei Rechner, die mit docker compose up dieselben drei verbundenen Container starten.', 'Left the compose.yaml with port, start order and automatic network. Right three machines that start the same three connected containers with docker compose up.')}>
       <In i={0}>
-        <rect x={420} y={110} width={160} height={150} rx={12} fill="#fff3d6" stroke="var(--keel)" strokeWidth={2} />
-        <text x={500} y={150} fontSize={15} fontWeight={700} fill="var(--ink)" textAnchor="middle" style={{ fontFamily: 'var(--mono)' }}>compose.yaml</text>
-        <Txt x={500} y={172} size={12.5} fill="#8a6a20" anchor="middle">{e('im Git-Repo', 'in the Git repo')}</Txt>
-        {[0, 1, 2].map(k => <rect key={k} x={442} y={188 + k * 20} width={116} height={12} rx={4} fill={`var(--svc-${(['frontend', 'api', 'db'] as const)[k]})`} />)}
+        <rect x={0} y={0} width={400} height={368} rx={14} fill="#fff3d6" stroke="var(--keel)" strokeWidth={2} />
+        <text x={16} y={28} fontSize={16} fontWeight={700} fill="var(--ink)" style={mono}>compose.yaml</text>
+        <Txt x={384} y={28} size={13} fill="#8a6a20" anchor="end">{e('im Repo', 'in the repo')}</Txt>
+        {yaml.map(([l], k) => {
+          const [code, note] = l.split('#')
+          return <text key={k} x={16} y={58 + k * 20} fontSize={13} fill="var(--ink)" style={mono}>{code}{note && <tspan fill="#8a6a20">#{note}</tspan>}</text>
+        })}
       </In>
-      <Go d="M418 150 L354 120" i={1} /><Go d="M582 150 L646 120" i={2} />
-      <Go d="M418 230 L354 260" i={3} /><Go d="M582 230 L646 260" i={4} />
+      {yaml.map(([, fix], k) => fix && pill(388, 58 + k * 20, fix, k < 5 ? 1 : 2))}
+      <In i={3}>
+        <path d="M16 330 H384" stroke="#e6c27a" strokeWidth={1.5} />
+      </In>
+      {pill(108, 353, e('✓ Netz', '✓ network'), 3, 92)}
+      <In i={3}><Txt x={118} y={354} size={12.5} fill="#8a6a20">{e('kein Eintrag nötig: legt Compose an', 'no entry needed: Compose creates it')}</Txt></In>
+      {team.map((host, k) => {
+        const y = k * 118
+        return (
+          <g key={k}>
+            <Go d={`M408 168 L462 ${y + 50}`} i={4} />
+            <In i={4 + k}>
+              <rect x={470} y={y} width={530} height={100} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
+              <Txt x={486} y={y + 23} size={14} w={700} fill="var(--ink-2)">{host}</Txt>
+              <text x={984} y={y + 23} fontSize={12.5} fill="var(--ink-3)" textAnchor="end" style={mono}>$ docker compose up</text>
+            </In>
+            {(['frontend', 'api', 'db'] as Svc[]).map((s, j) => <Box key={s} x={500 + j * 168} y={y + 40} w={136} h={44} svc={s} label={name(s)} size={14} i={4 + k} />)}
+            <Wire d={`M636 ${y + 62} H668`} k="ok" i={4 + k} />
+            <Wire d={`M804 ${y + 62} H836`} k="ok" i={4 + k} />
+          </g>
+        )
+      })}
     </Svg>
-    <Take i={5} label={e('Merke', 'Remember')} text={e('Die compose.yaml liegt mit dem Code im Repo. Wer sie hat, bekommt mit einem Befehl dieselben drei Container, auf dem Laptop wie auf dem Server.', 'compose.yaml lives in the repo with the code. Whoever has it gets the same three containers with one command, on a laptop as on the server.')} />
+    <Take i={7} label={e('Merke', 'Remember')} text={e('Netz, Port und Reihenfolge stehen einmal in der compose.yaml im Repo. Jeder im Team startet mit `docker compose up` dieselben drei Container.', 'Network, port and order are written once in the compose.yaml in the repo. Everyone in the team starts the same three containers with `docker compose up`.')} />
   </div>
 )
 
-/* ── ① 5 · what Compose is for: one machine yes, a cluster no ── */
-const cluster: [number, number, Svc, Svc][] = [[530, 90, 'api', 'db'], [760, 90, 'frontend', 'api'], [530, 200, 'db', 'frontend'], [760, 200, 'api', 'db']]
-export const OneShip = () => (
+
+/* ── ② 5 · data stays in a volume: down removes the container, the volume survives until down -v ── */
+const stage = [160, 440, 720]
+const dbFrame = (x: number, y: number, h: number, i: number, ghost?: boolean) => (
+  <In i={i}>
+    <rect x={x} y={y} width={220} height={h} rx={12} fill={ghost ? 'none' : '#fff'} stroke={ghost ? 'var(--ink-3)' : 'var(--svc-db)'} strokeWidth={ghost ? 1.5 : 2.5} strokeDasharray={ghost ? '6 5' : undefined} />
+    {ghost
+      ? <Txt x={x + 110} y={y + h / 2 + 5} size={13} w={700} fill="var(--ink-3)" anchor="middle">{e('Container entfernt', 'container removed')}</Txt>
+      : <Txt x={x + 14} y={y + 22} size={14} w={700} fill="var(--svc-db-d)">Container db</Txt>}
+  </In>
+)
+const cylinder = (cx: number, i: number) => (
+  <In i={i}>
+    <path d={`M${cx - 70} 284 V326 A70 9 0 0 0 ${cx + 70} 326 V284`} fill="#efeaff" stroke="var(--svc-db)" strokeWidth={2} />
+    <ellipse cx={cx} cy={284} rx={70} ry={9} fill="#f6f3ff" stroke="var(--svc-db)" strokeWidth={2} />
+    <Txt x={cx} y={314} size={13} w={700} fill="var(--svc-db-d)" anchor="middle">Volume dbdata</Txt>
+  </In>
+)
+export const Volumes = () => (
   <div className="dg-col">
-    <Svg w={1000} h={370} label={e('Links ein Rechner mit compose.yaml und drei Containern, rechts ein Cluster aus vier Rechnern, für den Compose nicht gedacht ist', 'Left one machine with compose.yaml and three containers, right a cluster of four machines Compose is not meant for')}>
-      <Tag x={20} y={0} w={460} label={e('Dafür ist Compose da', 'What Compose is for')} sub={e('ein Rechner: Laptop, Testserver, kleiner Server', 'one machine: laptop, test server, small server')} tone="ok" />
-      <Tag x={520} y={0} w={460} label={e('Dafür nicht', 'What it is not for')} sub={e('viele Rechner gemeinsam steuern', 'steering many machines together')} tone="sand" i={3} />
-      <Zone x={20} y={90} w={460} h={206} label={e('ein Rechner', 'one machine')} i={1} />
-      <Sheet x={62} y={156} w={44} h={54} lines={4} tone="sand" i={2} />
-      <Label x={84} y={236} size={12} mono weight={700} i={2}>compose.yaml</Label>
-      {(['frontend', 'api', 'db'] as Svc[]).map((s, k) => <Box key={s} x={150 + k * 106} y={166} w={96} h={54} svc={s} size={14} i={2} />)}
-      <Tick x={450} y={112} ok i={2} />
-      {cluster.map(([x, y, a, b], k) => (
-        <g key={k}>
-          <Zone x={x} y={y} w={210} h={96} label={e(`Rechner ${k + 1}`, `Machine ${k + 1}`)} i={4} />
-          <Box x={x + 16} y={y + 40} w={84} h={40} svc={a} size={13} i={4} />
-          <Box x={x + 110} y={y + 40} w={84} h={40} svc={b} size={13} i={4} />
-        </g>
-      ))}
-      <Tag x={530} y={312} w={440} label={e('dafür gibt es Kubernetes oder Docker Swarm', 'for that there is Kubernetes or Docker Swarm')} tone="sand" i={5} />
+    <Svg w={1000} h={372} label={e('Oben ohne Volume: nach docker compose down sind Container und Daten weg, nach up ist die Datenbank leer. Unten mit Volume dbdata: der Container verschwindet, das Volume bleibt, nach up sind die Daten wieder da.', 'Top without a volume: after docker compose down container and data are gone, after up the database is empty. Bottom with the volume dbdata: the container disappears, the volume stays, after up the data is back.')}>
+      <Label x={270} y={18} size={13} weight={700} i={0}>{e('läuft', 'running')}</Label>
+      <Label x={550} y={18} size={13} weight={700} mono i={0}>docker compose down</Label>
+      <Label x={830} y={18} size={13} weight={700} mono i={0}>docker compose up</Label>
+      <In i={0}>
+        <Txt x={0} y={86} size={14} w={700} fill="var(--ink)">{e('ohne Volume', 'without a volume')}</Txt>
+        <Txt x={0} y={104} size={12.5} fill="var(--ink-3)">{e('Daten im Container', 'data in the container')}</Txt>
+        <Txt x={0} y={226} size={14} w={700} fill="var(--ink)">{e('mit Volume', 'with a volume')}</Txt>
+        <Txt x={0} y={244} size={12.5} fill="var(--ink-3)">{e('Daten im Volume', 'data in the volume')}</Txt>
+      </In>
+
+      {dbFrame(stage[0], 44, 90, 1)}
+      <B x={stage[0] + 14} y={80} w={192} h={38} t="libs" label={e('Daten: Speiseplan', 'data: menu')} size={13.5} i={1} />
+      <Go d="M384 89 H436" i={2} />
+      {dbFrame(stage[1], 44, 90, 2, true)}
+      <Go d="M664 89 H716" i={3} />
+      {dbFrame(stage[2], 44, 90, 3)}
+      <B x={stage[2] + 14} y={80} w={192} h={38} t="gone" label={e('leer – Daten weg', 'empty – data gone')} size={13.5} i={3} />
+      <Mark x={stage[2] + 190} y={64} bad r={9} i={3} />
+
+      {dbFrame(stage[0], 170, 80, 4)}
+      <B x={stage[0] + 14} y={204} w={192} h={32} t="gone" label="/var/lib/postgresql" size={12.5} mono i={4} />
+      <Wire d={`M${stage[0] + 110} 252 V274`} i={4} />
+      {cylinder(stage[0] + 110, 4)}
+      <Go d="M384 210 H436" i={5} />
+      {dbFrame(stage[1], 170, 80, 5, true)}
+      {cylinder(stage[1] + 110, 5)}
+      <Mark x={stage[1] + 200} y={305} ok r={9} i={5} />
+      <Go d="M664 210 H716" i={6} />
+      {dbFrame(stage[2], 170, 80, 6)}
+      <B x={stage[2] + 14} y={204} w={192} h={32} t="gone" label="/var/lib/postgresql" size={12.5} mono i={6} />
+      <Wire d={`M${stage[2] + 110} 252 V274`} i={6} />
+      {cylinder(stage[2] + 110, 6)}
+      <Mark x={stage[2] + 200} y={305} ok r={9} i={6} />
+      <Label x={550} y={362} size={12.5} weight={700} tone="bad" i={7}>{e('docker compose down -v löscht auch das Volume – dann sind die Daten weg', 'docker compose down -v deletes the volume too – then the data is gone')}</Label>
     </Svg>
-    <Take i={6} label={e('Merke', 'Remember')} text={e('Compose startet alle Container einer App auf einem Rechner. Für eure Entwicklung und für Projekte ist das genau richtig.', 'Compose starts all containers of an app on one machine. For your development and for projects that is exactly right.')} />
+    <Take i={8} label={e('Merke', 'Remember')} text={e('Was ein Container selbst speichert, verschwindet mit ihm. Daten im Volume liegen außerhalb und überstehen down und up – erst `down -v` löscht sie.', 'What a container stores itself disappears with it. Data in a volume lives outside and survives down and up – only `down -v` deletes it.')} />
   </div>
 )
 
-/* ── ② 1 · names instead of ports: every service is reachable under its name, db instead of localhost:5432 ── */
-export const Phone = () => (
+
+/* ── ② 1 · db instead of localhost: the host changes, the port stays ── */
+const zoneBox = (x: number, w: number, label: string, sub: string, i: number) => (
+  <In i={i}>
+    <rect x={x} y={0} width={w} height={310} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
+    <Txt x={x + 16} y={23} size={14} w={700} fill="var(--ink-2)">{label}</Txt>
+    <Txt x={x + w - 16} y={23} size={13} fill="var(--ink-3)" anchor="end">{sub}</Txt>
+  </In>
+)
+const ctrFrame = (x: number, w: number, svc: Svc, name: string, i: number) => (
+  <In i={i}>
+    <rect x={x} y={44} width={w} height={180} rx={12} fill="#fff" stroke={`var(--svc-${svc})`} strokeWidth={2.5} />
+    <Txt x={x + 14} y={66} size={14} w={700} fill={`var(--svc-${svc}-d)`}>{name}</Txt>
+  </In>
+)
+/** JDBC URL with the host highlighted; the port is drawn the same in both. */
+const jdbc = (x: number, host: string, i: number) => (
+  <In i={i}>
+    <rect x={x} y={324} width={400} height={40} rx={10} fill="#fff" stroke="var(--line)" strokeWidth={1.5} />
+    <text x={x + 200} y={349} fontSize={14} textAnchor="middle" style={mono}>
+      <tspan fill="var(--ink-3)">jdbc:postgresql://</tspan><tspan fill="var(--ok)" fontWeight={700}>{host}</tspan><tspan fill="var(--blue-deep)" fontWeight={700}>:5432</tspan><tspan fill="var(--ink-3)">/mensa</tspan>
+    </text>
+  </In>
+)
+export const DbNotLocalhost = () => (
   <div className="dg-col">
-    <Svg w={1000} h={350} top={56} label={e('Drei Container im gemeinsamen Netz, jeder unter seinem Namen erreichbar. Die api erreicht die Datenbank über den Namen db statt über localhost:5432. localhost zeigt in der api auf die api selbst.', 'Three containers in the shared network, each reachable under its name. The api reaches the database by the name db instead of localhost:5432. Inside the api, localhost points at the api itself.')}>
-      {host(150, 250)}
-      {trio.map(([s, x], k) => (
+    <Svg w={1000} h={370} label={e('Links auf dem Laptop: Backend und Postgres laufen auf demselben Rechner, localhost:5432 trifft die Datenbank. Rechts mit Compose: localhost:5432 endet im Container backend selbst, dort lauscht nichts. db:5432 führt über das gemeinsame Netz zum Container db.', 'Left on the laptop: backend and Postgres run on the same machine, localhost:5432 hits the database. Right with Compose: localhost:5432 ends in the backend container itself, nothing listens there. db:5432 leads through the shared network to the db container.')}>
+      {zoneBox(0, 400, e('Dein Laptop', 'Your laptop'), e('ohne Docker', 'without Docker'), 0)}
+      <B x={24} y={60} w={352} h={54} t="app" label="java -jar app.jar" sub="Spring-Boot-Backend" size={15} i={0} />
+      <B x={24} y={196} w={352} h={54} t="app" label="Postgres" sub={e('installiert, lauscht auf :5432', 'installed, listens on :5432')} size={15} i={0} />
+      <Arrow d="M200 118 V190" kind="ok" i={0} />
+      <Label x={214} y={159} anchor="start" size={14} weight={700} mono tone="ok" i={0}>localhost:5432</Label>
+      <Mark x={352} y={154} ok r={9} i={0} />
+      <In i={0}><Txt x={200} y={286} size={12.5} fill="var(--ink-3)" anchor="middle">{e('beide auf demselben Rechner', 'both on the same machine')}</Txt></In>
+      {jdbc(0, 'localhost', 1)}
+
+      {zoneBox(440, 560, e('Dein Rechner', 'Your machine'), 'Docker Compose', 2)}
+      {ctrFrame(466, 210, 'api', e('Container backend', 'Container backend'), 2)}
+      {ctrFrame(776, 200, 'db', e('Container db', 'Container db'), 2)}
+      <B x={480} y={76} w={182} h={40} t="app" label="app.jar" size={15} i={2} />
+      <B x={790} y={76} w={172} h={40} t="app" label="Postgres :5432" size={15} i={2} />
+      <In i={2}><Txt x={876} y={180} size={12.5} fill="var(--ink-3)" anchor="middle">{e('im Netz erreichbar als db', 'reachable in the network as db')}</Txt></In>
+      <Wire d="M571 224 V256" i={2} /><Wire d="M876 224 V256" i={2} />
+      <B x={466} y={256} w={510} h={36} t="libs" label={e('gemeinsames Netz: Service-Name = Hostname', 'shared network: service name = host name')} size={13.5} i={2} />
+
+      <Arrow d="M520 120 V164" kind="bad" i={3} />
+      <Label x={534} y={147} anchor="start" size={12.5} weight={700} mono tone="bad" i={3}>localhost:5432</Label>
+      <B x={480} y={170} w={182} h={40} t="bad" label="Connection refused" size={13.5} i={3} />
+      <Arrow d="M664 96 H780" kind="ok" i={4} />
+      <Label x={721} y={86} size={14} weight={700} mono tone="ok" i={4}>db:5432</Label>
+      <Mark x={721} y={118} ok r={9} i={4} />
+      {jdbc(520, 'db', 5)}
+    </Svg>
+    <Take i={6} label={e('Merke', 'Remember')} text={e('Im Container zeigt localhost auf den Container selbst. Die Datenbank erreicht das Backend über ihren Service-Namen: `db:5432` statt `localhost:5432` – nur der Host ändert sich, der Port bleibt.', 'Inside a container localhost points at the container itself. The backend reaches the database by its service name: `db:5432` instead of `localhost:5432` – only the host changes, the port stays.')} />
+  </div>
+)
+
+
+/* ── ② 2 · two port worlds: host ports the operating system (and the browser) knows, container ports only Docker knows ── */
+const hostCol: [Svc, string, string, boolean][] = [['frontend', 'frontend', 'frontend:80', true], ['api', 'backend', 'backend:8080', false], ['db', 'db', 'db:5432', false]]
+const hx = (k: number) => 230 + k * 250
+export const HostPorts = () => (
+  <div className="dg-col">
+    <Svg w={1000} h={336} label={e('Außen der Rechner mit seinen Host-Ports, innen das Docker-Netz mit den Container-Ports. Nur frontend hat den Host-Port 8080, den der Browser als localhost:8080 erreicht. backend:8080 und db:5432 kennt nur Docker.', 'Outside the machine with its host ports, inside the Docker network with the container ports. Only frontend has host port 8080, which the browser reaches as localhost:8080. backend:8080 and db:5432 are known only to Docker.')}>
+      <In i={0}>
+        <rect x={170} y={0} width={830} height={330} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
+        <Txt x={186} y={23} size={14} w={700} fill="var(--ink-2)">{e('Dein Rechner', 'Your machine')}</Txt>
+        <Txt x={984} y={23} size={13} w={700} fill="var(--ok)" anchor="end">{e('Host-Ports: kennt das Betriebssystem', 'host ports: the operating system knows them')}</Txt>
+        <rect x={200} y={140} width={750} height={170} rx={14} fill="#f7faff" stroke="var(--blue)" strokeWidth={1.5} strokeDasharray="6 4" />
+        <Txt x={216} y={162} size={14} w={700} fill="var(--ink-2)">{e('Docker-Netz', 'Docker network')}</Txt>
+        <Txt x={934} y={162} size={13} w={700} fill="var(--blue-deep)" anchor="end">{e('Container-Ports: kennt nur Docker', 'container ports: only Docker knows them')}</Txt>
+      </In>
+      {hostCol.map(([s, label, cport, open], k) => (
         <g key={s}>
-          <Box x={x + 5} y={206} w={150} h={60} svc={s} i={1 + k} />
-          <Wire d={`M${x + 80} 268 V336`} i={1} />
-          <In i={1}>
-            <rect x={x + 20} y={286} width={120} height={30} rx={8} fill="#fff" stroke="var(--blue)" strokeWidth={2} />
-            <text x={x + 80} y={306} fontSize={15} fontWeight={700} textAnchor="middle" fill="var(--blue-deep)" style={{ fontFamily: 'var(--mono)' }}>{s}</text>
+          {open
+            ? <B x={hx(k) + 20} y={58} w={150} h={34} t="ok" label=":8080" size={15} mono i={1} />
+            : <B x={hx(k) + 20} y={58} w={150} h={34} t="gone" label={e('kein Host-Port', 'no host port')} size={13} i={1} />}
+          <Box x={hx(k)} y={190} w={190} h={56} svc={s} label={label} i={2} />
+          <In i={2}>
+            <rect x={hx(k) + 20} y={262} width={150} height={30} rx={8} fill="#dce9ff" stroke="var(--blue)" strokeWidth={1.5} />
+            <text x={hx(k) + 95} y={282} fontSize={13.5} fontWeight={700} fill="var(--blue-deep)" textAnchor="middle" style={mono}>{cport}</text>
           </In>
         </g>
       ))}
-      <B x={60} y={336} w={880} h={46} t="libs" label={e('gemeinsames Netz: jeder Service ist unter seinem Namen erreichbar', 'shared network: every service is reachable under its name')} size={15} i={1} />
-      <Arrow d="M579 236 H731" kind="ok" i={2} />
-      <Label x={655} y={226} size={15} weight={700} mono tone="ok" i={2}>db</Label>
-      <Arrow d="M470 204 C440 150 560 150 530 202" kind="bad" i={3} />
-      <Tag x={20} y={56} w={300} label={e('Service-Name = Adresse', 'service name = address')} sub={e('Docker löst den Namen zum Container auf', 'Docker resolves the name to the container')} tone="sky" i={1} />
-      <Lead d="M290 102 V301 H256" end={[252, 301]} i={1} />
-      <Tag x={350} y={56} w={300} label={e('localhost = ich selbst', 'localhost = myself')} sub={e('in der api heißt das: die api', 'inside the api that means: the api')} tone="bad" i={3} />
-      <Lead d="M500 102 V158" end={[500, 162]} i={3} />
-      <Tag x={680} y={56} w={300} label="DB_HOST = db" sub={e('statt localhost:5432', 'instead of localhost:5432')} tone="ok" i={2} />
-      <Lead d="M890 102 V202" end={[890, 204]} i={2} />
+      <Go d="M424 218 H474" i={2} /><Go d="M674 218 H724" i={2} />
+      <Arrow d="M325 96 V181" kind="ok" i={3} />
+      <Label x={335} y={128} anchor="start" size={13} weight={700} mono tone="ok" i={3}>ports: 8080:80</Label>
+      <In i={4}><Icon name="browser" x={40} y={48} s={56} /><Txt x={68} y={124} size={13} w={700} anchor="middle">Browser</Txt></In>
+      <Arrow d="M100 76 H242" kind="ok" i={4} />
+      <Label x={10} y={164} anchor="start" size={13} weight={700} mono tone="ok" i={5}>localhost:8080</Label>
+      <Mark x={150} y={160} ok r={9} i={5} />
+      <Label x={10} y={194} anchor="start" size={13} weight={700} mono tone="bad" i={6}>localhost:5432</Label>
+      <Mark x={150} y={190} bad r={9} i={6} />
     </Svg>
-    <Take i={4} label={e('Merke', 'Remember')} text={e('Auf dem Laptop lief die Datenbank unter localhost:5432. Im Container zeigt localhost auf die api selbst. Stattdessen hat jeder Service einen Namen, und die api schreibt einfach db.', 'On the laptop the database ran at localhost:5432. In a container localhost points at the api itself. Instead every service has a name, and the api simply writes db.')} />
+    <Take i={7} label={e('Merke', 'Remember')} text={e('Der Browser erreicht nur Host-Ports – hier `localhost:8080`. Container-Ports wie `backend:8080` und `db:5432` kennt nur Docker. `ports: "8080:80"` verbindet beide: Host-Port links, Container-Port rechts.', 'The browser only reaches host ports – here `localhost:8080`. Container ports like `backend:8080` and `db:5432` are known only to Docker. `ports: "8080:80"` connects both: host port left, container port right.')} />
   </div>
 )
+
+
+/* ── ② 3 · Vue runs in the browser: its API calls go through the frontend's nginx to backend:8080 ── */
+export const ApiProxy = () => (
+  <div className="dg-col">
+    <Svg w={1000} h={404} label={e('Die Vue-App läuft im Browser. fetch(/api/meals) geht an localhost:8080, nginx im Container frontend leitet /api/ an backend:8080 weiter, das backend fragt db:5432. fetch an http://backend:8080 scheitert im Browser, weil nur das Docker-Netz den Namen backend kennt.', 'The Vue app runs in the browser. fetch(/api/meals) goes to localhost:8080, nginx in the frontend container forwards /api/ to backend:8080, the backend asks db:5432. fetch to http://backend:8080 fails in the browser because only the Docker network knows the name backend.')}>
+      <In i={0}>
+        <rect x={290} y={0} width={710} height={400} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
+        <Txt x={306} y={23} size={14} w={700} fill="var(--ink-2)">{e('Dein Rechner', 'Your machine')}</Txt>
+        <rect x={430} y={40} width={554} height={340} rx={14} fill="#f7faff" stroke="var(--blue)" strokeWidth={1.5} strokeDasharray="6 4" />
+        <Txt x={446} y={62} size={14} w={700} fill="var(--ink-2)">{e('Docker-Netz', 'Docker network')}</Txt>
+        <rect x={450} y={80} width={250} height={124} rx={12} fill="#fff" stroke="var(--svc-frontend)" strokeWidth={2.5} />
+        <Txt x={464} y={102} size={14} w={700} fill="var(--svc-frontend-d)">{e('Container frontend · nginx', 'Container frontend · nginx')}</Txt>
+      </In>
+      <B x={462} y={112} w={226} h={34} t="app" label={e('/ → Vue-App (HTML, JS)', '/ → Vue app (HTML, JS)')} size={12.5} i={0} />
+      <B x={462} y={156} w={226} h={34} t="libs" label="/api/ → backend:8080" size={12.5} mono i={0} />
+      <Box x={760} y={112} w={200} h={56} svc="api" label="backend:8080" size={14} i={0} />
+      <Box x={760} y={272} w={200} h={56} svc="db" label="db:5432" size={14} i={0} />
+      <B x={310} y={140} w={96} h={34} t="ok" label=":8080" size={14} mono i={0} />
+
+      <In i={1}>
+        <rect x={0} y={40} width={250} height={320} rx={12} fill="#fff" stroke="var(--ink-3)" strokeWidth={1.5} />
+        <path d="M0 68 H250" stroke="var(--line)" strokeWidth={1.5} />
+        <circle cx={16} cy={54} r={4} fill="#c3cddb" /><circle cx={30} cy={54} r={4} fill="#c3cddb" />
+        <text x={46} y={59} fontSize={12} fill="var(--ink-3)" style={mono}>localhost:8080</text>
+        <Txt x={16} y={100} size={15} w={700} fill="var(--ink)">{e('Vue-App', 'Vue app')}</Txt>
+        <Txt x={16} y={118} size={12.5} fill="var(--ink-3)">{e('vom frontend geladen, läuft hier', 'loaded from frontend, runs here')}</Txt>
+      </In>
+      <In i={2}>
+        <rect x={12} y={140} width={226} height={34} rx={8} fill="#e2f5ec" stroke="var(--ok)" strokeWidth={1.5} />
+        <text x={24} y={162} fontSize={12} fontWeight={700} fill="var(--ok)" style={mono}>fetch('/api/meals')</text>
+      </In>
+      <Mark x={220} y={157} ok r={9} i={2} />
+      <Num n={1} x={272} y={133} i={2} />
+      <Arrow d="M242 157 H302" kind="ok" i={2} />
+      <Arrow d="M410 157 H442" kind="ok" i={2} />
+      <Num n={2} x={730} y={192} i={3} />
+      <Arrow d="M692 173 L752 146" kind="ok" i={3} />
+      <Arrow d="M860 172 V264" kind="ok" i={3} />
+
+      <In i={4}>
+        <rect x={12} y={220} width={226} height={34} rx={8} fill="#fdecea" stroke="var(--bad)" strokeWidth={1.5} />
+        <text x={18} y={242} fontSize={11.5} fontWeight={700} fill="var(--bad)" style={mono}>fetch('http://backend:8080/…')</text>
+        <text x={16} y={280} fontSize={11.5} fontWeight={700} fill="var(--bad)" style={mono}>ERR_NAME_NOT_RESOLVED</text>
+        <Txt x={16} y={302} size={12} fill="var(--ink-3)">{e('backend kennt nur das Docker-Netz', 'only the Docker network knows backend')}</Txt>
+      </In>
+      <Mark x={270} y={237} bad r={9} i={4} />
+    </Svg>
+    <Take i={5} label={e('Merke', 'Remember')} text={e('Die Vue-App läuft im Browser, nicht im Container. Sie ruft `/api/…` beim frontend auf, nginx leitet an `backend:8080` weiter – den Namen backend kennt der Browser nicht.', 'The Vue app runs in the browser, not in the container. It calls `/api/…` on the frontend, nginx forwards to `backend:8080` – the browser does not know the name backend.')} />
+  </div>
+)
+
 
 /* ── ② 3 · started is not ready ── */
 const lane = (y: number, label: string, i: number, bars: ReactNode) => (
@@ -206,26 +356,26 @@ const bar = (x: number, y: number, w: number, svc: Svc, text: string, i: number,
 )
 export const Order = () => (
   <div className="dg-col">
-    <Svg w={1000} h={400} label={e('Zeitleisten: Ohne Warten stürzt die api ab, mit Healthcheck startet sie erst, wenn die Datenbank bereit ist', 'Timelines: without waiting the api crashes, with a healthcheck it starts only once the database is ready')}>
-      <Tag x={20} y={0} w={960} label={e('ohne Warten: nur die Reihenfolge', 'without waiting: just the order')} tone="sand" />
+    <Svg w={1000} h={400} label={e('Zeitleisten: Ohne Warten stürzt das backend ab, mit Healthcheck startet es erst, wenn die Datenbank bereit ist', 'Timelines: without waiting the backend crashes, with a healthcheck it starts only once the database is ready')}>
+      <Tag x={20} y={0} w={960} label={e('nur depends_on: wartet auf den Start der db, nicht darauf, dass sie bereit ist', 'only depends_on: waits for db to start, not for it to be ready')} tone="sand" />
       {lane(60, 'db', 1, <>{bar(160, 60, 260, 'db', e('fährt hoch …', 'starting up …'), 1, 'light')}{bar(424, 60, 520, 'db', e('bereit', 'ready'), 2)}</>)}
-      {lane(106, 'api', 2, <>{bar(200, 106, 150, 'api', e('startet', 'starts'), 2)}</>)}
+      {lane(106, 'backend', 2, <>{bar(200, 106, 150, 'api', e('startet', 'starts'), 2)}</>)}
       <Mark x={366} y={124} bad i={2} r={13} />
       <In i={2}><Txt x={386} y={130} size={13.5} w={700} fill="var(--bad)">{e('Connection refused: db noch nicht bereit', 'Connection refused: db not ready yet')}</Txt></In>
-      <Tag x={20} y={176} w={960} label={e('mit Healthcheck: Compose prüft db, bis sie „healthy“ meldet', 'with a healthcheck: Compose checks db until it reports “healthy”')} tone="ok" i={3} />
+      <Tag x={20} y={176} w={960} label={e('mit Healthcheck und condition: service_healthy: Compose wartet auf „healthy“', 'with a healthcheck and condition: service_healthy: Compose waits for “healthy”')} tone="ok" i={3} />
       {lane(236, 'db', 3, <>{bar(160, 236, 260, 'db', e('fährt hoch …', 'starting up …'), 3, 'light')}{bar(424, 236, 520, 'db', 'healthy', 4)}</>)}
-      {lane(282, 'api', 4, <>{bar(440, 282, 504, 'api', e('startet erst jetzt', 'starts only now'), 5)}</>)}
+      {lane(282, 'backend', 4, <>{bar(440, 282, 504, 'api', e('startet erst jetzt', 'starts only now'), 5)}</>)}
       <Mark x={930} y={300} ok i={5} r={13} />
       {[0, 1, 2].map(k => <In key={k} i={3}><path d={`M${220 + k * 70} 230 v6`} stroke="var(--ink-3)" strokeWidth={2} /><Txt x={220 + k * 70} y={226} size={12} fill="var(--ink-3)" anchor="middle">{e('prüft', 'check')}</Txt></In>)}
       <In i={3}><path d="M140 350 H960" stroke="var(--ink-3)" strokeWidth={2} markerEnd="url(#ah-mute)" /><Txt x={960} y={378} size={13} fill="var(--ink-3)" anchor="end">{e('Zeit', 'time')}</Txt></In>
     </Svg>
-    <Take i={6} label={e('Merke', 'Remember')} text={e('Gestartet ist nicht bereit. Erst wenn der Healthcheck der Datenbank „healthy“ meldet, startet die api.', 'Started is not ready. Only when the database’s healthcheck reports “healthy” does the api start.')} />
+    <Take i={6} label={e('Merke', 'Remember')} text={e('Gestartet ist nicht bereit. Erst wenn der Healthcheck der Datenbank „healthy“ meldet, startet das backend.', 'Started is not ready. Only when the database’s healthcheck reports “healthy” does the backend start.')} />
   </div>
 )
 
 /* ── ② 5 · the one commands slide: what each command leaves behind ── */
 const cleanup: [string, string, ('ok' | 'bad')[], 'ok' | 'bad' | undefined][] = [
-  ['up -d', e('legt Netz, Volume und Container an und startet sie', 'creates network, volume and containers and starts them'), ['ok', 'ok', 'ok'], 'ok'],
+  ['up -d', e('baut fehlende Images, legt Netz, Volume und Container an', 'builds missing images, creates network, volume and containers'), ['ok', 'ok', 'ok'], 'ok'],
   ['down', e('Container und Netz weg, Volume bleibt: nach up ist alles da', 'containers and network gone, volume stays: after up all is back'), ['bad', 'bad', 'ok'], undefined],
   ['down -v', e('löscht auch das Volume: alle gesammelten Daten sind weg', 'deletes the volume too: all collected data is gone'), ['bad', 'bad', 'bad'], 'bad'],
 ]
@@ -234,18 +384,26 @@ export const Commands = () => (
     <Code title="compose.yaml" kind="file" lines={[
       'services:',
       '  frontend:',
-      '    image: mensa-frontend:1.0',
+      { t: '    build:', chip: e('Dockerfile statt fertigem Image', 'Dockerfile instead of a ready image') },
+      '      context: ./frontend',
+      '      dockerfile: Dockerfile',
       { t: '    ports: ["8080:80"]', chip: 'Port' },
-      '  api:',
-      '    image: mensa-api:1.0',
+      '  backend:',
+      '    build:',
+      '      context: ./backend',
+      '      dockerfile: Dockerfile',
       { t: '    environment:', chip: e('Umgebungsvariablen', 'environment variables') },
       '      DB_HOST: db',
-      { t: '    depends_on: [db]', chip: e('Reihenfolge', 'Order') },
+      { t: '    depends_on:', chip: e('wartet auf healthy', 'waits for healthy') },
+      '      db: { condition: service_healthy }',
       '  db:',
       '    image: postgres:18',
+      { t: '    expose: ["5432"]', chip: e('Port nur im Netz', 'port only in the network') },
       '    environment:',
       '      POSTGRES_PASSWORD: geheim',
-      { t: '    volumes: [dbdata:/var/lib/postgresql]', chip: 'Volume' },
+      '    volumes: [dbdata:/var/lib/postgresql]',
+      { t: '    healthcheck:', chip: 'Healthcheck' },
+      '      test: pg_isready -U postgres',
       'volumes:',
       '  dbdata:',
     ]} />

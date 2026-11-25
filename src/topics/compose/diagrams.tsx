@@ -1,5 +1,6 @@
 import { at, css } from '../../components/Stack.tsx'
 import { Svg, Box, Arrow, Label, Wire, Ctr, Num, Tick, Zone, Take, type BoxTone } from '../../components/Svg.tsx'
+import { e } from '../../components/quizModel.ts'
 import { Icon, IconSvg } from '../../components/Icons.tsx'
 import { Code, type Line } from '../../components/Code.tsx'
 import { Visuals } from '../../components/Visuals.tsx'
@@ -22,7 +23,7 @@ const fileAll: Line[] = [
   '      DB_USER: postgres',
   '      DB_PASSWORD: geheim',
   '    volumes:',
-  '      - uploads:/var/www/html/wp-content',
+  '      - uploads:/app/uploads',
   '    depends_on: [db]',
   { t: '    restart: unless-stopped', dim: true },
   '  db:',
@@ -204,9 +205,9 @@ const days: { title: string; cmds: Cmd[] }[] = [
     { c: 'run --rm api sh', note: 'neuer Wegwerf-Container', dim: true },
     { c: 'port api 8080', note: 'welcher Host-Port gehört dazu?', dim: true },
   ] },
-  { title: 'Anhalten', cmds: [
-    { c: 'stop', note: 'anhalten, Container bleiben' },
-    { c: 'start', note: 'angehaltene wieder starten' },
+  { title: 'Stoppen', cmds: [
+    { c: 'stop', note: 'stoppen, Container bleiben' },
+    { c: 'start', note: 'gestoppte wieder starten' },
     { c: 'restart api', note: 'einen Service neu starten' },
   ] },
   { title: 'Aufräumen', cmds: [
@@ -276,7 +277,7 @@ export const Merge = () => (
         { label: 'compose.yaml', tone: 'navy', note: 'Basis' }, { label: 'compose.override.yaml', tone: 'blue', note: 'wird automatisch gelesen' },
         { label: '.env', tone: 'sky', note: 'Dev-Werte' }, { label: 'Ergebnis: Dev-Umgebung' },
       ] },
-      { title: 'Produktion · up -f compose.yaml -f compose.prod.yaml', layers: [
+      { title: e('Produktion · compose -f compose.yaml -f compose.prod.yaml up', 'Production · compose -f compose.yaml -f compose.prod.yaml up'), layers: [
         { label: 'compose.yaml', tone: 'navy', note: 'Basis' }, { label: 'compose.prod.yaml', tone: 'blue', note: 'mit -f angegeben' },
         { label: '.env', tone: 'sky', note: 'Prod-Werte, nicht im Git' }, { label: 'Ergebnis: Prod-Umgebung' },
       ] },
@@ -331,13 +332,13 @@ export const UpFlow = () => (
 const svcLines: Line[] = [
   'services:', '  api:',
   { t: '    image: mensa-api:1.0', n: 1 },
-  { t: '    command: apache2-foreground', n: 2 },
-  { t: '    user: "33:33"', n: 3 },
-  { t: '    working_dir: /var/www/html', n: 3 },
+  { t: '    command: ["java", "-jar", "app.jar"]', n: 2 },
+  { t: '    user: "10001:10001"', n: 3 },
+  { t: '    working_dir: /app', n: 3 },
   '    environment:',
   { t: '      DB_HOST: db', n: 4 },
   '    volumes:',
-  { t: '      - uploads:/var/www/html/wp-content', n: 5 },
+  { t: '      - uploads:/app/uploads', n: 5 },
   '    ports:',
   { t: '      - "8080:8080"', n: 6 },
   { t: '    networks: [web]', n: 7 },
@@ -351,11 +352,11 @@ export const ServiceMap = () => (
       <Box i={1} x={12} y={130} w={76} h={56} t="engine" label="8080" size={16} />
       <Num i={1} n={6} x={12} y={130} />
       <Ctr i={2} x={120} y={40} w={350} h={320} name="Container api" />
-      <Box i={3} x={136} y={74} w={318} h={56} t="app" label="Prozess: apache2-foreground" sub="PID 1" size={15} /><Num i={3} n={2} x={454} y={74} />
-      <Box i={4} x={136} y={140} w={318} h={50} t="app" label="Benutzer 33 · Ordner /var/www/html" size={14} /><Num i={4} n={3} x={454} y={140} />
+      <Box i={3} x={136} y={74} w={318} h={56} t="app" label={e('Prozess: java -jar app.jar', 'Process: java -jar app.jar')} sub="PID 1" size={15} /><Num i={3} n={2} x={454} y={74} />
+      <Box i={4} x={136} y={140} w={318} h={50} t="app" label={e('Benutzer 10001 · Ordner /app', 'User 10001 · folder /app')} size={14} /><Num i={4} n={3} x={454} y={140} />
       <Box i={5} x={136} y={200} w={318} h={44} t="host" label="DB_HOST=db" size={14} mono /><Num i={5} n={4} x={454} y={200} />
       <Box i={6} x={136} y={254} w={200} h={90} t="libs" label="Image-Layer" sub="mensa-api:1.0" size={15} /><Num i={6} n={1} x={136} y={254} />
-      <Box i={7} x={346} y={254} w={108} h={90} t="reg" label="wp-content" sub="Mount" size={13} />
+      <Box i={7} x={346} y={254} w={108} h={90} t="reg" label="/app/uploads" sub="Mount" size={12} />
       <Box i={7} x={500} y={254} w={106} h={90} t="reg" label="uploads" sub="Volume" size={14} /><Num i={7} n={5} x={606} y={254} />
       <Arrow i={7} both d="M456 299 H496" />
       <Arrow i={1} d="M90 158 H132" />
@@ -367,7 +368,7 @@ export const ServiceMap = () => (
 
 /* How the start command is assembled from two slots. */
 const cmdRows: { title: string; sub: string; e: [string, BoxTone]; c: [string, BoxTone]; r: string; y: number }[] = [
-  { title: 'Nur das Image', sub: 'Compose ändert nichts', e: ['/entry.sh', 'libs'], c: ['nginx -g off', 'libs'], r: '/entry.sh nginx -g off', y: 44 },
+  { title: 'Nur das Image', sub: 'Compose ändert nichts', e: ['/entry.sh', 'libs'], c: ['nginx -g "daemon off;"', 'libs'], r: '/entry.sh nginx -g …', y: 44 },
   { title: 'command:', sub: 'ersetzt nur CMD', e: ['/entry.sh', 'libs'], c: ['nginx -t', 'engine'], r: '/entry.sh nginx -t', y: 144 },
   { title: 'entrypoint:', sub: 'ersetzt ihn, leert CMD', e: ['/init.sh', 'engine'], c: ['geleert', 'gone'], r: '/init.sh', y: 244 },
 ]
@@ -382,7 +383,7 @@ export const StartCommand = () => (
           <Label i={k * 3} x={0} y={r.y + 48} anchor="start" size={13} tone="muted">{r.sub}</Label>
           <Box i={k * 3} x={200} y={r.y} w={230} h={66} t={r.e[1]} label={r.e[0]} size={15} mono />
           <Label i={k * 3} x={442} y={r.y + 39} size={20} weight={700}>+</Label>
-          <Box i={k * 3 + 1} x={455} y={r.y} w={210} h={66} t={r.c[1]} label={r.c[0]} size={15} mono />
+          <Box i={k * 3 + 1} x={455} y={r.y} w={210} h={66} t={r.c[1]} label={r.c[0]} size={14} mono />
           <Arrow i={k * 3 + 2} d={`M667 ${r.y + 33} H696`} />
           <Box i={k * 3 + 2} x={700} y={r.y} w={300} h={66} t="container" label={r.r} size={15} mono />
         </g>
@@ -724,7 +725,7 @@ export const FileWays = () => (
     <Box i={1} x={40} y={106} w={250} h={54} t="reg" label="compose.prod.yaml" size={14} mono />
     <Arrow i={2} d="M155 162 V222" label="mischen" lx={167} ly={198} anchor="start" />
     <Box i={2} x={20} y={226} w={270} h={70} t="container" label="ein Service api" sub="mit Werten aus beiden" size={15} />
-    <Label i={2} x={155} y={350} size={13} mono>up -f a.yaml -f b.yaml</Label>
+    <Label i={2} x={155} y={350} size={12} mono>compose -f a.yaml -f b.yaml up</Label>
     <Label i={2} x={155} y={376} size={13} tone="muted">für Umgebungen: dev, prod</Label>
 
     <Zone i={3} x={345} y={0} w={310} h={430} t="app" label="extends: erben" />

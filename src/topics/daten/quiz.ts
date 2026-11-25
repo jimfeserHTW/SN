@@ -11,9 +11,9 @@ const quiz: Record<string, Task[]> = {
     choice(e('Die api speichert Uploads in ihrem eigenen Dateisystem. Was passiert bei docker rm?', 'The api stores uploads in its own file system. What happens on docker rm?'), [
       e('Die Uploads landen automatisch in einem Volume', 'The uploads automatically end up in a volume'), e('Die Uploads sind weg', 'The uploads are gone'), e('Die Uploads wandern ins Image', 'The uploads move into the image'),
     ], 1, e('Was ein Container in sich selbst schreibt, wird mit ihm gelöscht.', 'Whatever a container writes into itself is deleted with it.')),
-    choice(e('Ein Container mit tmpfs wird angehalten und wieder gestartet. Was liegt im tmpfs?', 'A container with a tmpfs is stopped and started again. What is in the tmpfs?'), [
+    choice(e('Ein Container mit tmpfs wird gestoppt und wieder gestartet. Was liegt im tmpfs?', 'A container with a tmpfs is stopped and started again. What is in the tmpfs?'), [
       e('Dasselbe wie vorher', 'The same as before'), e('Nichts, er ist leer', 'Nothing, it is empty'), e('Der Inhalt des Images', 'The contents of the image'),
-    ], 1, e('tmpfs liegt nur im Arbeitsspeicher und ist beim Anhalten leer.', 'tmpfs only lives in memory and is empty once the container stops.')),
+    ], 1, e('tmpfs liegt nur im Arbeitsspeicher und ist nach dem Stoppen leer.', 'tmpfs only lives in memory and is empty once the container stops.')),
   ],
   'volumes': [
     choice(e('Was bleibt nach `docker compose down` erhalten?', 'What is kept after `docker compose down`?'), [

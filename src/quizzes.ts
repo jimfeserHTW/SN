@@ -7,9 +7,10 @@ import daten from './topics/daten/quiz.ts'
 import netzwerk from './topics/netzwerk/quiz.ts'
 import isolation from './topics/isolation/quiz.ts'
 import compose from './topics/compose/quiz.ts'
+import absturz from './topics/absturz/quiz.ts'
 import type { Task } from './components/quizModel.ts'
 
 export { QUIZ_EN } from './components/quizModel.ts'
 export const QUIZZES: Record<string, Record<string, Task[]>> = {
-  einfuehrung, architektur, images, daten, netzwerk, isolation, compose,
+  einfuehrung, architektur, images, daten, netzwerk, isolation, compose, absturz,
 }

@@ -1,14 +1,28 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { topics, hrefOf, quizHref, type Chapter } from '../content.ts'
 import { LAB_LEVELS } from '../labs.ts'
 
-export const Mark = ({ size = 22 }: { size?: number }) => (
-  <svg viewBox="0 0 32 32" width={size} height={size} aria-hidden="true">
-    <rect x="3" y="17" width="12" height="12" rx="3" fill="var(--blue)" />
-    <rect x="17" y="17" width="12" height="12" rx="3" fill="#6EA0FF" />
-    <rect x="10" y="3" width="12" height="12" rx="3" fill="var(--ink)" />
-  </svg>
+// Dot-matrix logo: 5×7 glyphs. S and N always show, the other letters of StudyNothing unfold on hover or focus.
+const GLYPHS: Record<string, string> = {
+  S: '01111100001000001110000010000111110', N: '10001110011010110011100011000110001',
+  t: '00100001000111000100001000010000011', u: '00000000001000110001100011001101101',
+  d: '00001000010111110001100011000101111', y: '00000000001000110001011110000101110',
+  o: '00000000000111010001100011000101110', h: '10000100001011011001100011000110001',
+  i: '00100000000110000100001000010001110', n: '00000000001011011001100011000110001',
+  g: '00000000000111110001011110000101110',
+}
+export const Logo = ({ open }: { open?: boolean }) => (
+  <span className={open ? 'logo open' : 'logo'} aria-hidden="true">
+    {[...'StudyNothing'].map((ch, k) => {
+      const core = k === 0 || k === 5
+      return (
+        <span key={k} className={core ? 'L' : 'L x'} style={core ? undefined : { '--k': k } as CSSProperties}>
+          {[...GLYPHS[ch]].map((b, j) => <i key={j} className={b === '1' ? (core ? 'on core' : 'on') : undefined} />)}
+        </span>
+      )
+    })}
+  </span>
 )
 
 const href = (c: string) => `#/${c}`
@@ -23,7 +37,7 @@ export function Header({ route, topicId }: { route: string; topicId?: string }) 
   const timer = useRef(0)
   const show = (m: Menu) => { clearTimeout(timer.current); timer.current = window.setTimeout(() => setMenu(m), 90) }
   const hide = () => { clearTimeout(timer.current); setMenu(null) }
-  const meLinks = [{ id: 'stats', href: href('me'), label: t('Statistics') }, { id: 'settings', href: href('me/settings'), label: t('Settings') }]
+  const meLinks = [{ id: 'stats', href: href('me'), label: t('Statistics') }, { id: 'settings', href: href('me/settings'), label: t('Settings') }, { id: 'share', href: href('me/share'), label: t('Share StudyNothing') }]
   const labLinks = [...LAB_LEVELS.map(l => ({ id: l.id, href: href(`labs/${l.id}`), label: t(l.level) })), { id: 'sandbox', href: href('labs/sandbox'), label: t('Docker sandbox') }]
   // Theory and quiz share one map: every topic with its sub-chapters, strand by strand.
   const topicMap = (to: 'theory' | 'quiz') => {
@@ -53,7 +67,7 @@ export function Header({ route, topicId }: { route: string; topicId?: string }) 
       {(menu || sheet) && <div className="scrim" onClick={() => { hide(); setSheet(false) }} onMouseEnter={hide} aria-hidden="true" />}
       <header className="bar">
         <div className="bar-in">
-          <a className="brand" href="#/" aria-label={t('home')} onMouseEnter={hide}><Mark /><span aria-hidden="true">S<span className="grow">tudy</span>N<span className="grow">othing</span></span></a>
+          <a className="brand" href="#/" aria-label={t('home')} onMouseEnter={hide}><Logo /></a>
           <nav className="nav" aria-label={t('nav.label')}>
             <a href={href(topics[0].id)} aria-current={topicId ? 'page' : undefined} aria-expanded={menu === 'theory'} data-open={menu === 'theory'}
               onMouseEnter={() => show('theory')} onFocus={() => show('theory')}>{t('nav.theory')}</a>

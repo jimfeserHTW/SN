@@ -8,8 +8,8 @@ const trio: [Svc, number][] = [['frontend', 190], ['api', 420], ['db', 650]]
 
 /* ── one command instead of many: Compose works through compose.yaml ── */
 const steps = [
-  e('compose.yaml lesen', 'read compose.yaml'), e('Netz anlegen', 'create the network'), e('db starten', 'start db'),
-  e('api starten', 'start api'), e('frontend starten', 'start frontend'), e('Port 8080 veröffentlichen', 'publish port 8080'),
+  e('compose.yaml lesen', 'read compose.yaml'), e('Netz und Volume anlegen', 'create network and volume'), e('db starten', 'start db'),
+  e('api starten', 'start api'), e('frontend mit Port starten', 'start frontend with port'), e('Port 8080 ist erreichbar', 'port 8080 is reachable'),
 ]
 export const Crew = () => (
   <div className="dg-col">
@@ -31,7 +31,7 @@ export const Crew = () => (
       <B x={268} y={238} w={84} h={36} t="ok" label=":8080" mono size={14} i={5} /><Num n={6} x={352} y={238} i={5} />
       <Go d="M356 256 H466" i={5} kind="ok" />
     </Svg>
-    <Take i={6} label={e('Merke', 'Remember')} text={e('Ihr gebt einen Befehl. Compose startet alles laut compose.yaml, die Datenbank zuerst, und veröffentlicht am Ende den Port.', 'You give one command. Compose starts everything as compose.yaml says, the database first, and finally publishes the port.')} />
+    <Take i={6} label={e('Merke', 'Remember')} text={e('Ihr gebt einen Befehl. Compose startet alles laut compose.yaml, die Datenbank zuerst. Den Port richtet Docker gleich beim Anlegen des frontend-Containers ein.', 'You give one command. Compose starts everything as compose.yaml says, the database first. Docker sets up the port right when it creates the frontend container.')} />
   </div>
 )
 
@@ -164,7 +164,7 @@ export const Envelope = () => (
       <Box x={60} y={110} w={170} h={80} svc="db" i={1} />
       <In i={1}><rect x={250} y={100} width={210} height={56} rx={8} fill="#fff3d6" stroke="#c9a24f" strokeWidth={2} /><text x={266} y={134} fontSize={13.5} fill="var(--ink)" style={{ fontFamily: 'var(--mono)' }}>PASSWORD=geheim</text></In>
       {[0, 1].map(k => <g key={k}><Person x={290 + k * 80} y={200} role="grey" i={1} />{k === 0 && <In i={1}><ellipse cx={330} cy={196} rx={14} ry={8} fill="#fff" stroke="var(--bad)" strokeWidth={2} /><circle cx={330} cy={196} r={3.5} fill="var(--bad)" /></In>}</g>)}
-      <Tag x={60} y={270} w={400} label={e('Jeder mit Zugang sieht es', 'Anyone with access sees it')} sub="docker inspect · ps · Logs" tone="bad" i={1} />
+      <Tag x={60} y={270} w={400} label={e('Jeder mit Zugang sieht es', 'Anyone with access sees it')} sub="docker inspect · docker exec env · /proc/…/environ" tone="bad" i={1} />
       <Box x={560} y={110} w={170} h={80} svc="db" i={3} />
       <In i={3}><path d="M760 110 h180 v100 h-180 z M760 110 l90 56 l90 -56" fill="#fff" stroke="var(--keel)" strokeWidth={2} strokeLinejoin="round" /><circle cx={850} cy={170} r={14} fill="var(--bad)" stroke="#fff" strokeWidth={2} /></In>
       <Go d="M756 160 H736" i={3} />

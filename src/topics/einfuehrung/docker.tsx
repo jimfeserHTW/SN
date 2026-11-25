@@ -1,192 +1,191 @@
-import type { ReactNode } from 'react'
-import { Svg, Take, Box as B, Zone, Ctr, Arrow, Label, Tick } from '../../components/Svg.tsx'
-import { Icon } from '../../components/Icons.tsx'
+import { Svg, Take, Box as B, Zone, Ctr, Arrow, Label, Wire, Tick } from '../../components/Svg.tsx'
+import { Icon, type IconName } from '../../components/Icons.tsx'
 import { Code } from '../../components/Code.tsx'
 import { e } from '../../components/quizModel.ts'
-import { Box, Tag, Lead, Mark, Person, Plan, Sheet, In, Txt, Go } from '../../components/harbor/harbor.tsx'
+import { Tag, Mark, In, Txt, Go } from '../../components/harbor/harbor.tsx'
 
 // Einführung in Docker: the student team behind the Mensa-App. Technical terms only, drawn as abstract machines and containers.
 const arrow = (d: string, i: number, kind: 'go' | 'back' = 'go') => <Go d={d} i={i} kind={kind} />
 
-/* ── ① 1 · the project: one repo, four machines ── */
-const team: { x: number; y: number; who: string; env: string; ok?: boolean; bad?: boolean; note: string; right?: boolean }[] = [
-  { x: 20, y: 24, who: e('Lena · macOS', 'Lena · macOS'), env: 'JDK 21 · Node 22 · Postgres', ok: true, note: e('läuft', 'runs') },
-  { x: 650, y: 24, who: e('Tim · Windows', 'Tim · Windows'), env: 'JDK 17 · Node 18', bad: true, note: e('Build bricht ab: JDK zu alt', 'build fails: JDK too old'), right: true },
-  { x: 20, y: 312, who: e('Ali · Linux', 'Ali · Linux'), env: e('JDK 21 · Node 22 · keine DB', 'JDK 21 · Node 22 · no DB'), bad: true, note: e('startet, findet keine Datenbank', 'starts, finds no database') },
-  { x: 650, y: 312, who: e('Server zur Abgabe', 'Server for the hand-in'), env: e('Version unbekannt', 'version unknown'), note: e('Demo-Tag: Läuft es dort?', 'Demo day: will it run there?'), right: true },
-]
-export const Project = () => (
-  <div className="dg-col">
-    <Svg w={1000} h={420} label={e('Ein Repo mit der Mensa-App, vier Rechner mit verschiedenen Versionen', 'One repo with the Mensa-App, four machines with different versions')}>
+/* ── ① 1 + 2 share one scene: the same repo, the same three machines, the same terminals. Only the layers change. ── */
+const col = (k: number) => 170 + k * 280
+const mono = { fontFamily: 'var(--mono)', fontVariantLigatures: 'none' }
+const who = [e('Lenas Laptop', 'Lena’s laptop'), e('Tims Laptop', 'Tim’s laptop'), e('Abgabe-Server', 'Hand-in server')]
+const oses = ['macOS', 'Windows', 'Linux']
+const chip = (x: number, w: number, label: string, fill: string, stroke: string, ink: string) => (
+  <><rect x={x} y={40} width={w} height={38} rx={8} fill={fill} stroke={stroke} strokeWidth={2} /><Txt x={x + w / 2} y={64} size={14} w={700} fill={ink} anchor="middle">{label}</Txt></>
+)
+/** The Git repo at the top and the three `git clone` arrows. With `dockerfile`, the box widens for backend/Dockerfile (built in at step di). */
+const Repo = ({ dockerfile, di = 1 }: { dockerfile?: boolean; di?: number }) => {
+  const [x, w] = dockerfile ? [310, 540] : [380, 400]
+  return (
+    <>
       <In i={0}>
-        <rect x={370} y={128} width={260} height={164} rx={18} fill="#fff" stroke="var(--blue)" strokeWidth={2.5} />
-        <Txt x={500} y={160} size={20} w={700} fill="var(--ink)" anchor="middle">Mensa-App</Txt>
-        <Txt x={500} y={180} size={13} w={500} fill="var(--ink-3)" anchor="middle">{e('ein Repo, derselbe Code für alle', 'one repo, the same code for all')}</Txt>
-        {([['Vue-Frontend', 'var(--svc-frontend)'], ['Spring-Boot-API', 'var(--svc-api)'], [e('Postgres-Datenbank', 'Postgres database'), 'var(--svc-db)']] as const).map(([l, c], k) => (
-          <g key={l}><rect x={392} y={194 + k * 30} width={216} height={24} rx={7} fill={c} /><Txt x={500} y={211 + k * 30} size={13.5} w={700} fill="#fff" anchor="middle">{l}</Txt></g>
-        ))}
+        <rect x={x} y={0} width={w} height={92} rx={14} fill="#fff" stroke="var(--keel)" strokeWidth={2} />
+        <Txt x={x + 16} y={25} size={15} w={700} fill="var(--ink)">{e('Git-Repo · mensa-app', 'Git repo · mensa-app')}</Txt>
+        <Txt x={x + w - 16} y={25} size={13} fill="var(--ink-3)" anchor="end">{e('derselbe Commit', 'the same commit')}</Txt>
+        {chip(x + 16, dockerfile ? 140 : 178, 'frontend/ · Vue', '#fff', 'var(--svc-frontend)', 'var(--svc-frontend-d)')}
+        {chip(dockerfile ? 478 : 586, dockerfile ? 186 : 178, 'backend/ · Spring Boot', 'var(--svc-api)', 'var(--svc-api)', '#fff')}
       </In>
-      {team.map((m, k) => {
-        const tx = m.right ? m.x : m.x + 84, ix = m.right ? m.x + 262 : m.x
-        return (
-          <g key={m.who}>
-            <In i={1 + k}><Icon name={k === 3 ? 'server' : 'laptop'} x={ix} y={m.y} s={64} /></In>
-            <Tag x={tx} y={m.y + 4} w={250} label={m.who} sub={m.env} tone={m.ok ? 'ok' : m.bad ? 'bad' : undefined} i={1 + k} />
-            <Mark x={m.right ? tx + 250 : tx} y={m.y + 4} ok={m.ok} bad={m.bad} i={1 + k} r={12} />
-            <In i={1 + k}><Txt x={tx} y={m.y + 74} size={13.5} fill={m.ok ? 'var(--ok)' : m.bad ? 'var(--bad)' : 'var(--ink-2)'}>{m.note}</Txt></In>
-          </g>
-        )
-      })}
-      <Lead d="M370 160 L354 72" end={[354, 54]} i={5} />
-      <Lead d="M630 160 L646 72" end={[646, 54]} i={5} />
-      <Lead d="M370 262 L354 346" end={[354, 342]} i={5} />
-      <Lead d="M630 262 L646 346" end={[646, 342]} i={5} />
-    </Svg>
-    <Take i={6} label={e('Merke', 'Remember')} text={e('Der Code ist überall gleich. Die Umgebung drumherum nicht: andere Versionen, fehlende Programme, andere Betriebssysteme.', 'The code is the same everywhere. The environment around it is not: other versions, missing programs, other operating systems.')} />
-  </div>
+      {dockerfile && <In i={di}>{chip(676, 158, 'backend/Dockerfile', '#fff', 'var(--blue)', 'var(--blue-deep)')}</In>}
+      {who.map((_, k) => <Go key={k} d={`M${500 + k * 80} 98 L${col(k) + 130} 132`} i={di} />)}
+      <Label x={598} y={122} anchor="start" size={13} mono weight={700} i={di}>git clone</Label>
+    </>
+  )
+}
+const machine = (k: number, h: number, i: number) => (
+  <In i={i}>
+    <rect x={col(k)} y={142} width={260} height={h} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
+    <Txt x={col(k) + 16} y={166} size={14} w={700} fill="var(--ink-2)">{who[k]}</Txt>
+  </In>
 )
-
-/* ── ① 2 · works on my machine: the jar uses whatever JDK the machine has installed ── */
-const machine = (x: number, who: string, os: string, jdk: string, ok: boolean, i: number) => (
+/** Dark terminal strip under machine k: prompt, result (green or red), detail. */
+const term = (k: number, [cmd, res, detail]: string[], ok: boolean, i: number, size = 12.5) => (
   <>
-    <Zone x={x} y={118} w={460} h={232} label={who} sub={os} i={i} />
-    <B x={x + 120} y={156} w={220} h={50} t="app" label="java -jar app.jar" size={15} mono i={i} />
-    <Arrow d={`M${x + 230} 208 V230`} i={i} />
-    <Label x={x + 244} y={224} anchor="start" size={13} tone="muted" i={i}>{e('nutzt das installierte JDK', 'uses the installed JDK')}</Label>
-    <B x={x + 120} y={234} w={220} h={50} t={ok ? 'ok' : 'bad'} label={jdk} sub={e('auf dem Rechner installiert', 'installed on the machine')} size={16} i={i + 1} />
-    <B x={x + 16} y={296} w={428} h={40} t="kernel" label={e('Betriebssystem', 'Operating system')} size={14} i={i} />
+    <In i={i}>
+      <rect x={col(k)} y={384} width={260} height={76} rx={10} fill="#0f1b2d" />
+      <text x={col(k) + 12} y={406} fontSize={size} fill="#94a3b8" style={mono}>{cmd}</text>
+      <text x={col(k) + 12} y={428} fontSize={size} fontWeight={700} fill={ok ? '#4ade80' : '#fca5a5'} style={mono}>{res}</text>
+      <text x={col(k) + 12} y={448} fontSize={12} fill="#cbd5e1" style={mono}>{detail}</text>
+    </In>
+    <Mark x={col(k) + 238} y={424} ok={ok} bad={!ok} r={10} i={i} />
   </>
 )
-export const Loose = () => (
-  <div className="dg-col">
-    <Svg w={1000} h={420} label={e('Dieselbe app.jar auf zwei Rechnern: Mit JDK 21 läuft sie, mit JDK 17 nicht', 'The same app.jar on two machines: it runs with JDK 21, not with JDK 17')}>
-      <B x={380} y={0} w={240} h={56} t="app" label="app.jar" sub={e('aus dem Repo, bei beiden gleich', 'from the repo, the same for both')} size={16} />
-      <Arrow d="M430 58 L250 112" i={1} />
-      <Arrow d="M570 58 L750 112" i={3} />
-      {machine(20, e('Lenas Laptop', 'Lena’s laptop'), 'macOS', 'JDK 21', true, 1)}
-      {machine(520, e('Tims Laptop', 'Tim’s laptop'), 'Windows', 'JDK 17', false, 3)}
-      <Tag x={120} y={366} w={260} label={e('✓ läuft', '✓ runs')} tone="ok" i={2} />
-      <Tag x={560} y={366} w={380} label="UnsupportedClassVersionError" sub={e('mit JDK 21 gebaut, JDK 17 installiert', 'built with JDK 21, JDK 17 installed')} tone="bad" i={4} />
-    </Svg>
-    <Take i={5} label={e('Ursache', 'Cause')} text={e('Ohne Container nutzt die App, was auf dem Rechner gerade installiert ist. Und auf jedem Rechner ist etwas anderes installiert.', 'Without a container the app uses whatever is installed on the machine. And every machine has something else installed.')} />
-  </div>
+/** Dashed divider across all machines with the two gutter labels. */
+const divide = (y: number, top: [string, string], bottom: [string, string], i: number) => (
+  <In i={i}>
+    <path d={`M0 ${y} H990`} stroke="var(--ink-2)" strokeWidth={2} strokeDasharray="7 5" fill="none" />
+    <Txt x={0} y={y - 42} size={14} w={700} fill="var(--ink)">{top[0]}</Txt>
+    <Txt x={0} y={y - 24} size={12.5} fill="var(--ink-3)">{top[1]}</Txt>
+    <Txt x={0} y={y + 34} size={14} w={700} fill="var(--ink)">{bottom[0]}</Txt>
+    <Txt x={0} y={y + 52} size={12.5} fill="var(--ink-3)">{bottom[1]}</Txt>
+  </In>
 )
 
-/* ── ① 3 · the idea: ship the app together with its environment ── */
-const hosts = [e('Lena · macOS', 'Lena · macOS'), e('Tim · Windows', 'Tim · Windows'), e('Server · Linux', 'Server · Linux')]
-const plain: [string, boolean][] = [['JDK 21', true], ['JDK 17', false], [e('kein JDK', 'no JDK'), false]]
-export const Standard = () => (
-  <div className="dg-col">
-    <Svg w={1000} h={384} label={e('Links nur die App, die auf zwei von drei Rechnern scheitert. Rechts ein Image mit App und JDK, das auf allen drei Rechnern mit Docker läuft.', 'Left only the app, which fails on two of three machines. Right an image with app and JDK that runs on all three machines with Docker.')}>
-      <Tag x={0} y={0} w={480} label={e('Ohne Docker: nur die App ausliefern', 'Without Docker: ship only the app')} sub={e('die Umgebung bringt jeder Rechner selbst mit', 'every machine brings its own environment')} tone="sky" />
-      <Tag x={520} y={0} w={480} label={e('Mit Docker: App samt Umgebung ausliefern', 'With Docker: ship the app with its environment')} sub={e('ein Image, auf jedem Rechner gleich', 'one image, the same on every machine')} tone="sky" i={4} />
-      <B x={150} y={110} w={180} h={56} t="app" label="app.jar" sub={e('nur der Code', 'only the code')} i={1} />
-      <Ctr x={620} y={60} w={280} h={146} name="Image mensa-api" i={5} />
-      <B x={640} y={90} w={240} h={32} t="app" label="app.jar" size={14} i={5} />
-      <B x={640} y={128} w={240} h={32} t="libs" label="JDK 21" size={14} i={5} />
-      <B x={640} y={166} w={240} h={32} t="libs" label={e('Bibliotheken', 'Libraries')} size={14} i={5} />
-      {hosts.map((h, k) => {
-        const lx = k * 162, rx = 520 + k * 162
-        return (
-          <g key={h}>
-            <Arrow d={`M240 168 L${lx + 75} 236`} i={2} />
-            <Zone x={lx} y={240} w={150} h={96} label={h} i={2} />
-            <B x={lx + 12} y={276} w={126} h={46} t={plain[k][1] ? 'ok' : 'bad'} label={plain[k][0]} size={15} i={2} />
-            <Tick x={lx + 75} y={362} ok={plain[k][1]} bad={!plain[k][1]} i={3} />
-            <Arrow d={`M760 208 L${rx + 75} 236`} i={6} />
-            <Zone x={rx} y={240} w={150} h={96} label={h} i={6} />
-            <B x={rx + 12} y={276} w={126} h={46} t="engine" label="Docker" size={15} i={6} />
-            <Tick x={rx + 75} y={362} ok i={7} />
-          </g>
-        )
-      })}
-    </Svg>
-    <Take i={8} label={e('Die Idee', 'The idea')} text={e('Docker liefert nicht nur die App aus, sondern die App mit allem, was sie braucht. Auf dem Zielrechner muss nur Docker laufen.', 'Docker does not ship only the app, but the app with everything it needs. The target machine only has to run Docker.')} />
-  </div>
-)
-
-/* ── ① 4 · what goes into the container, and what stays with the machine ── */
-const inside = (x: number, name: string, items: [string, string, 'app' | 'libs'][], i: number) => (
-  <>
-    <Ctr x={x} y={36} w={290} h={244} name={name} i={i} />
-    {items.map(([l, s, t], k) => <B key={l} x={x + 16} y={66 + k * 52} w={258} h={44} t={t} label={l} sub={s} size={15} i={i} />)}
-  </>
-)
-export const Packed = () => (
-  <div className="dg-col">
-    <Svg w={1000} h={420} label={e('Zwei Container mit App, Laufzeit, Bibliotheken und Einstellungen. Darunter Docker Engine und der Kernel, den beide teilen.', 'Two containers with app, runtime, libraries and settings. Below them the Docker Engine and the kernel both share.')}>
-      <Zone x={0} y={0} w={640} h={420} label={e('Dein Rechner', 'Your machine')} sub="Linux" />
-      {inside(20, e('Container api', 'Container api'), [['app.jar', e('euer Code', 'your code'), 'app'], ['JDK 21', e('die Laufzeit', 'the runtime'), 'libs'], [e('Bibliotheken', 'Libraries'), e('z. B. libssl', 'e.g. libssl'), 'libs'], [e('Einstellungen', 'Settings'), e('Port, Profil', 'port, profile'), 'libs']], 1)}
-      {inside(330, e('Container db', 'Container db'), [['Postgres 18', e('die Datenbank', 'the database'), 'app'], [e('Bibliotheken', 'Libraries'), e('z. B. glibc', 'e.g. glibc'), 'libs'], [e('Einstellungen', 'Settings'), e('Passwort, Port', 'password, port'), 'libs']], 2)}
-      <B x={20} y={292} w={600} h={44} t="engine" label="Docker Engine" size={15} i={3} />
-      <B x={20} y={348} w={600} h={56} t="kernel" label="Kernel" sub={e('einer für alle Container', 'one for all containers')} i={4} />
-      <Tag x={670} y={120} w={320} label={e('Im Container', 'Inside the container')} sub={e('alles, was die App braucht', 'everything the app needs')} tone="ok" i={2} />
-      <Lead d="M670 143 H628" end={[624, 143]} i={2} />
-      <Tag x={670} y={354} w={320} label={e('Nicht im Container', 'Not in the container')} sub={e('der Kernel: gehört dem Rechner', 'the kernel: belongs to the machine')} tone="sand" i={4} />
-      <Lead d="M670 376 H628" end={[624, 376]} i={4} />
-    </Svg>
-    <Take i={5} label={e('Merke', 'Remember')} text={e('Ein Container ist eure App plus ihre Umgebung, fest verpackt. Den Kern des Betriebssystems teilen sich alle Container eines Rechners.', 'A container is your app plus its environment, packed for good. All containers on a machine share the core of the operating system.')} />
-  </div>
-)
-
-/* ── ① 5 · who uses Docker ── */
-const crew: { role: 'student' | 'grey'; title: string; sub: string; prop: (x: number) => ReactNode }[] = [
-  { role: 'student', title: e('Entwicklung', 'Development'), sub: e('baut die Images', 'builds the images'), prop: x => <Sheet x={x} y={196} w={38} h={46} /> },
-  { role: 'grey', title: e('Tests und CI', 'Tests and CI'), sub: e('prüft jedes Image', 'checks every image'), prop: x => <Mark x={x + 18} y={220} ok r={16} /> },
-  { role: 'student', title: e('Betrieb', 'Operations'), sub: e('startet Container auf Servern', 'runs containers on servers'), prop: x => <Icon name="server" x={x - 6} y={194} s={52} /> },
-  { role: 'grey', title: e('Lehre und Teams', 'Teaching and teams'), sub: e('gleiche Umgebung für alle', 'the same environment for all'), prop: x => <Icon name="laptop" x={x - 6} y={194} s={52} /> },
+/* ── ① 1 · works on my machine: everyone clones the same commit and builds locally, only the installed JDK differs ── */
+const jdks: { jdk: string; sub: string; t: 'ok' | 'bad' | 'gone'; out: string[] }[] = [
+  { jdk: 'JDK 21', sub: e('installiert', 'installed'), t: 'ok', out: ['$ ./mvnw spring-boot:run', 'BUILD SUCCESS', 'Started MensaApplication'] },
+  { jdk: 'JDK 17', sub: e('installiert · zu alt', 'installed · too old'), t: 'bad', out: ['$ ./mvnw spring-boot:run', 'BUILD FAILURE', 'release version 21 not supported'] },
+  { jdk: e('kein JDK', 'no JDK'), sub: e('nicht installiert', 'not installed'), t: 'gone', out: ['$ ./mvnw spring-boot:run', 'Error: JAVA_HOME is not', 'defined correctly.'] },
 ]
-export const Harbour = () => (
+export const WorksForMe = () => (
   <div className="dg-col">
-    <Svg w={1000} h={330} label={e('Vier Stationen: Entwicklung, Tests, Betrieb, Lehre. Alle nutzen dasselbe Image.', 'Four stations: development, tests, operations, teaching. All use the same image.')}>
-      {crew.map((c, k) => {
-        const x = 14 + k * 248
+    <Svg w={1000} h={330} top={136} label={e('Drei Rechner klonen dasselbe Repo und bauen das Backend mit ./mvnw. Mit JDK 21 läuft es, mit JDK 17 bricht der Build ab, ohne JDK startet Maven gar nicht.', 'Three machines clone the same repo and build the backend with ./mvnw. With JDK 21 it runs, with JDK 17 the build fails, without a JDK Maven does not even start.')}>
+      {jdks.map((m, k) => (
+        <g key={k}>
+          {machine(k, 226, 1)}
+          <B x={col(k) + 12} y={180} w={236} h={48} t="app" label={e('Quellcode + pom.xml', 'Source code + pom.xml')} sub={e('verlangt Java 21', 'requires Java 21')} size={15} i={1} />
+          <B x={col(k) + 12} y={256} w={236} h={48} t={m.t} label={m.jdk} sub={m.sub} size={15} i={2} />
+          <B x={col(k) + 12} y={314} w={236} h={40} t="kernel" label={oses[k]} size={14} i={1} />
+          {term(k, m.out, m.t === 'ok', 3 + k)}
+        </g>
+      ))}
+      {divide(242, [e('im Repo', 'in the repo'), e('bei allen gleich', 'the same for all')], [e('auf dem Rechner', 'on the machine'), e('bei jedem anders', 'different for each')], 6)}
+    </Svg>
+    <Take i={7} label={e('Merke', 'Remember')} text={e('Im Repo ist der Code für alle gleich. Das JDK darunter installiert jeder selbst – und überall ist es ein anderes.', 'In the repo the code is the same for everyone. The JDK below it is installed by each person – and it differs everywhere.')} />
+  </div>
+)
+
+/* ── ① 2 · with Docker: the Dockerfile puts the JDK into the image, so the machine only needs Docker ── */
+const engines = [e('Docker Desktop · Linux-VM', 'Docker Desktop · Linux VM'), e('Docker Desktop · Linux-VM', 'Docker Desktop · Linux VM'), 'Docker Engine']
+const built = ['$ docker build -t mensa-backend .', '[+] Building (9/9) FINISHED', '=> naming to …/mensa-backend']
+export const Recipe = () => (
+  <div className="dg-col">
+    <Svg w={1000} h={330} top={136} label={e('Dasselbe Repo, jetzt mit einem Dockerfile im Backend. Jeder Rechner baut daraus ein Image mit app.jar und JDK 21. Auf dem Rechner bleiben nur Docker und das Betriebssystem.', 'The same repo, now with a Dockerfile in the backend. Every machine builds an image with app.jar and JDK 21 from it. Only Docker and the operating system stay on the machine.')}>
+      {who.map((_, k) => (
+        <g key={k}>
+          {machine(k, 234, 2)}
+          <B x={col(k) + 12} y={310} w={236} h={26} t="engine" label={engines[k]} size={13} i={2} />
+          <B x={col(k) + 12} y={344} w={236} h={24} t="kernel" label={oses[k]} size={13} i={2} />
+          {term(k, built, true, 3 + k, 11.5)}
+          <Ctr x={col(k) + 10} y={176} w={240} h={114} name="Image mensa-backend" i={6} />
+          <B x={col(k) + 20} y={210} w={220} h={30} t="app" label={e('app.jar · im Image gebaut', 'app.jar · built in the image')} size={13.5} i={6} />
+          <B x={col(k) + 20} y={250} w={220} h={30} t="libs" label="JDK 21 · Linux-Basis" size={13.5} i={6} />
+        </g>
+      ))}
+      {divide(300, [e('im Image', 'in the image'), e('laut Dockerfile', 'as the Dockerfile says')], [e('auf dem Rechner', 'on the machine'), e('nur noch Docker', 'only Docker')], 7)}
+    </Svg>
+    <Take i={8} label={e('Merke', 'Remember')} text={e('Das Dockerfile legt fest, was ins Image kommt – auch das JDK 21, das Docker beim Bauen lädt. Auf dem Rechner muss nur noch Docker laufen.', 'The Dockerfile decides what goes into the image – including JDK 21, which Docker downloads while building. The machine only has to run Docker.')} />
+  </div>
+)
+
+/* ── ① 3 · build, then run: Dockerfile → image → containers, next to the Java steps students know ── */
+// Same lines as on the commands slide: the image builds the jar itself, so no JDK is needed on the machine.
+const dockerfile = ['FROM maven:3.9-eclipse-temurin-21', 'WORKDIR /app', 'COPY . .', 'RUN mvn -q package -DskipTests', 'RUN cp target/*.jar app.jar', 'EXPOSE 8080', 'CMD ["java", "-jar", "app.jar"]']
+const running = ['backend', 'backend-test']
+export const BuildRun = () => (
+  <div className="dg-col">
+    <Svg w={1000} h={260} label={e('Das Dockerfile wird mit docker build zum Image mensa-backend. docker run startet daraus zwei Container. Darunter die Java-Entsprechung: Mensa.java, javac, Mensa.class, new, Objekte.', 'The Dockerfile becomes the image mensa-backend with docker build. docker run starts two containers from it. Below the Java equivalent: Mensa.java, javac, Mensa.class, new, objects.')}>
+      <In i={0}>
+        <rect x={0} y={0} width={290} height={196} rx={14} fill="#fff3d6" stroke="var(--keel)" strokeWidth={2} />
+        <text x={16} y={26} fontSize={15} fontWeight={700} fill="var(--ink)" style={mono}>Dockerfile</text>
+        <Txt x={274} y={26} size={12.5} fill="#8a6a20" anchor="end">{e('das Rezept', 'the recipe')}</Txt>
+        {dockerfile.map((l, k) => <text key={k} x={16} y={56 + k * 20} fontSize={12} fill="var(--ink)" style={mono}>{l}</text>)}
+      </In>
+      <Arrow d="M296 98 H388" i={1} />
+      <In i={1}><text x={342} y={86} fontSize={11.5} fontWeight={700} fill="var(--ink-2)" textAnchor="middle" style={mono}>docker build</text></In>
+      <Ctr x={396} y={0} w={220} h={196} name="Image mensa-backend" i={1} />
+      <B x={410} y={36} w={192} h={40} t="app" label="app.jar" size={14} i={1} />
+      <B x={410} y={84} w={192} h={40} t="libs" label="JDK 21 · Maven" size={14} i={1} />
+      <B x={410} y={132} w={192} h={40} t="libs" label="Linux-Basis" size={14} i={1} />
+      <Arrow d="M622 76 L706 46" i={2} /><Arrow d="M622 120 L706 150" i={2} />
+      <In i={2}><text x={666} y={102} fontSize={11.5} fontWeight={700} fill="var(--ink-2)" textAnchor="middle" style={mono}>docker run</text></In>
+      {running.map((n, k) => (
+        <In key={n} i={2}>
+          <rect x={716} y={k * 108} width={284} height={88} rx={12} fill="#fff" stroke="var(--svc-api)" strokeWidth={2.5} />
+          <Txt x={730} y={k * 108 + 22} size={14} w={700} fill="var(--svc-api-d)">{`Container ${n}`}</Txt>
+          <circle cx={928} cy={k * 108 + 17} r={5} fill="var(--ok)" />
+          <Txt x={984} y={k * 108 + 22} size={12.5} w={700} fill="var(--ok)" anchor="end">{e('läuft', 'running')}</Txt>
+          <text x={744} y={k * 108 + 60} fontSize={13} fill="var(--ink)" style={mono}>java -jar app.jar</text>
+          <rect x={730} y={k * 108 + 36} width={256} height={38} rx={8} fill="none" stroke="var(--line)" strokeWidth={1.5} />
+        </In>
+      ))}
+      <Tag x={0} y={222} w={290} label={e('≈ Mensa.java · Quellcode', '≈ Mensa.java · source code')} tone="sky" size={14} i={3} />
+      <Tag x={396} y={222} w={220} label={e('≈ Mensa.class · fest', '≈ Mensa.class · fixed')} tone="sky" size={14} i={3} />
+      <Tag x={716} y={222} w={284} label={e('≈ new Mensa() · Objekte', '≈ new Mensa() · objects')} tone="sky" size={14} i={3} />
+      <Label x={343} y={242} size={12} weight={700} mono tone="muted" i={3}>≈ javac</Label>
+      <Label x={667} y={242} size={12} weight={700} mono tone="muted" i={3}>≈ new</Label>
+    </Svg>
+    <Take i={4} label={e('Merke', 'Remember')} text={e('`docker build` macht aus dem Dockerfile ein Image – wie javac aus Java-Code eine .class. `docker run` startet daraus Container – wie new Objekte.', '`docker build` turns the Dockerfile into an image – like javac turns Java code into a .class. `docker run` starts containers from it – like new creates objects.')} />
+  </div>
+)
+
+/* ── ② 1 · what a container is: the same process, only with its own view of files, network and processes ── */
+const views: [IconName, string, string, string][] = [
+  ['folder', e('Dateien', 'files'), e('alle Dateien des Rechners', 'all files of the machine'), e('nur das Image: /app, JDK 21', 'only the image: /app, JDK 21')],
+  ['network', e('Netz', 'Network'), e('localhost = der Rechner', 'localhost = the machine'), e('eigene IP · localhost = der Container', 'own IP · localhost = the container')],
+  ['bolt', e('Prozesse', 'processes'), e('sieht alle Prozesse', 'sees all processes'), e('sieht nur sich selbst', 'sees only itself')],
+]
+export const Inside = () => (
+  <div className="dg-col">
+    <Svg w={1000} h={404} label={e('Derselbe Prozess java -jar app.jar links ohne, rechts im Container. Im Container sieht er nur die Dateien des Images, hat ein eigenes Netz mit eigenem localhost und sieht nur sich selbst. Den Linux-Kernel teilen sich alle.', 'The same process java -jar app.jar left without, right inside a container. In the container it sees only the image’s files, has its own network with its own localhost and sees only itself. All of them share the Linux kernel.')}>
+      <In i={0}>
+        <rect x={0} y={0} width={1000} height={400} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
+        <Txt x={16} y={23} size={14} w={700} fill="var(--ink-2)">{e('Dein Rechner', 'Your machine')}</Txt>
+        <Txt x={984} y={23} size={13} fill="var(--ink-3)" anchor="end">Linux</Txt>
+        <Txt x={24} y={56} size={14} w={700} fill="var(--ink)">{e('ohne Container', 'without a container')}</Txt>
+      </In>
+      <B x={24} y={70} w={380} h={46} t="app" label="java -jar app.jar" size={15} mono i={0} />
+      <Ctr x={584} y={34} w={404} h={292} name={e('im Container backend', 'in the container backend')} i={1} />
+      <B x={596} y={70} w={380} h={46} t="app" label="java -jar app.jar" size={15} mono i={1} />
+      {views.map(([icon, what, host, own], k) => {
+        const y = 146 + k * 60
         return (
-          <g key={c.title}>
-            <In i={k}><rect x={x} y={92} width={224} height={158} rx={16} fill="#fff" stroke="var(--line)" strokeWidth={1.5} /></In>
-            <Person x={x + 62} y={196} s={1.3} role={c.role} i={k} />
-            <In i={k}>{c.prop(x + 128)}</In>
-            <In i={k}><Txt x={x + 112} y={124} size={17} w={700} fill="var(--ink)" anchor="middle">{c.title}</Txt></In>
-            <In i={k}><Txt x={x + 112} y={146} size={13} w={500} anchor="middle">{c.sub}</Txt></In>
-            {k < 3 && arrow(`M${x + 228} 200 H${x + 244}`, k + 1)}
+          <g key={icon}>
+            <In i={2 + k}><Icon name={icon} x={436} y={y + 6} s={34} /><Txt x={478} y={y + 29} size={14} w={700} fill="var(--ink)">{what}</Txt></In>
+            <B x={24} y={y} w={380} h={46} t="reg" label={host} size={14} i={2 + k} />
+            <B x={596} y={y} w={380} h={46} t="libs" label={own} size={14} i={2 + k} />
           </g>
         )
       })}
-      <Tag x={180} y={20} w={640} label={e('Alle reichen dasselbe Image weiter', 'Everyone passes the same image along')} sub={e('niemand installiert die App von Hand neu', 'nobody reinstalls the app by hand')} tone="blue" i={4} />
-      <Tag x={250} y={274} w={500} label={e('Kleine Teams, Unis und große Firmen arbeiten so', 'Small teams, universities and big companies work like this')} tone="sky" i={5} />
+      <Wire d="M214 312 V342" i={5} /><Wire d="M786 326 V342" i={5} />
+      <B x={24} y={342} w={952} h={48} t="kernel" label={e('Linux-Kernel · teilen sich alle Prozesse und Container', 'Linux kernel · shared by all processes and containers')} sub={e('auf macOS und Windows: der Kernel der Linux-VM von Docker Desktop', 'on macOS and Windows: the kernel of Docker Desktop’s Linux VM')} size={15} i={5} />
     </Svg>
+    <Take i={6} label={e('Merke', 'Remember')} text={e('Ein Container ist ein normaler Prozess mit eigener Sicht: eigene Dateien aus dem Image, eigenes Netz mit eigenem localhost, eigene Prozessliste. Den Kernel teilt er mit dem Rechner.', 'A container is a normal process with its own view: its own files from the image, its own network with its own localhost, its own process list. It shares the kernel with the machine.')} />
   </div>
 )
 
-/* ── ② 1 · blueprint and container, like class and object ── */
-export const ClassObject = () => (
-  <div className="dg-col">
-    <Svg w={1000} h={360} label={e('Klasse und Objekte in Java neben Image und Containern', 'Class and objects in Java next to image and containers')}>
-      <Tag x={40} y={0} w={400} label="Java" sub={e('was ihr kennt', 'what you know')} tone="sky" />
-      <Tag x={560} y={0} w={400} label="Docker" sub={e('was neu ist', 'what is new')} tone="sky" i={3} />
-      <In i={1}><rect x={140} y={70} width={200} height={70} rx={12} fill="#fff" stroke="var(--keel)" strokeWidth={2} /><Txt x={240} y={102} size={16} w={700} fill="var(--ink)" anchor="middle">class Mensa</Txt><Txt x={240} y={124} size={13} anchor="middle">{e('der Bauplan', 'the blueprint')}</Txt></In>
-      {[0, 1, 2].map(k => (
-        <g key={k}>
-          {arrow(`M${240 + (k - 1) * 40} 142 L${100 + k * 140} 208`, 2)}
-          <In i={2}><rect x={40 + k * 140} y={212} width={120} height={52} rx={26} fill="var(--sky)" stroke="var(--blue)" strokeWidth={2} /><Txt x={100 + k * 140} y={243} size={14} w={700} fill="var(--ink)" anchor="middle">new Mensa()</Txt></In>
-        </g>
-      ))}
-      <Plan x={700} y={70} w={120} h={70} i={4} />
-      <In i={4}><Txt x={760} y={160} size={14} w={700} fill="var(--blue-deep)" anchor="middle">Image mensa-api:1.0</Txt></In>
-      {[0, 1, 2].map(k => (
-        <g key={k}>
-          {arrow(`M${760 + (k - 1) * 40} 168 L${620 + k * 140} 208`, 5)}
-          <Box x={562 + k * 140} y={212} w={116} h={52} svc="api" label="api" i={5} />
-        </g>
-      ))}
-      <Tag x={60} y={296} w={260} label={e('Klasse  ≈  Image', 'class  ≈  image')} sub={e('der Bauplan, ändert sich nicht', 'the blueprint, never changes')} i={6} />
-      <Tag x={370} y={296} w={260} label={e('Objekt  ≈  Container', 'object  ≈  container')} sub={e('ein laufendes Exemplar', 'one running instance')} i={7} />
-      <Tag x={680} y={296} w={260} label={e('new  ≈  docker run', 'new  ≈  docker run')} sub={e('macht aus dem Plan ein Exemplar', 'turns the plan into an instance')} i={8} />
-    </Svg>
-  </div>
-)
-
-/* ── ② 2 · java -jar, Docker, Podman and a VM side by side: the core slide ── */
+/* ── ② 2 · java -jar, docker run, podman run and a VM side by side, with what really differs ── */
 const cx = (k: number) => 290 + k * 178
 type Val = 'ok' | 'bad' | string
 const facts: [string, Val, Val, Val, Val][] = [
@@ -196,11 +195,11 @@ const facts: [string, Val, Val, Val, Val][] = [
   [e('zusätzliche Startzeit', 'extra start-up time'), '–', '< 1 s', '< 1 s', e('OS bootet', 'OS boots')],
   [e('läuft überall gleich', 'runs the same everywhere'), 'bad', 'ok', 'ok', 'ok'],
 ]
-const container = (x: number, i: number) => (
+const boxed = (x: number, i: number) => (
   <>
     <Ctr x={x} y={44} w={166} h={116} name="Container" i={i} />
     <B x={x + 10} y={72} w={146} h={36} t="app" label="app.jar" size={14} i={i} />
-    <B x={x + 10} y={114} w={146} h={36} t="libs" label="JDK 21" size={14} i={i} />
+    <B x={x + 10} y={114} w={146} h={36} t="libs" label="JDK 21 · Linux" size={13} i={i} />
   </>
 )
 export const JarVsContainer = () => (
@@ -210,23 +209,18 @@ export const JarVsContainer = () => (
       <Label x={10} y={106} anchor="start" size={14} weight={700}>{e('App und Umgebung', 'App and environment')}</Label>
       <Label x={10} y={192} anchor="start" size={14} weight={700}>{e('dazwischen', 'in between')}</Label>
       <Label x={10} y={238} anchor="start" size={14} weight={700}>{e('ganz unten', 'at the bottom')}</Label>
-
       <Label x={cx(0) + 83} y={78} size={13} tone="muted">{e('direkt auf dem Rechner', 'directly on the machine')}</Label>
       <B x={cx(0)} y={104} w={166} h={50} t="app" label="app.jar" sub={e('ein Prozess', 'one process')} size={15} />
       <B x={cx(0)} y={168} w={166} h={38} t="libs" label={e('JDK 17 · installiert', 'JDK 17 · installed')} size={13} />
-
-      {container(cx(1), 2)}
-      <B x={cx(1)} y={168} w={166} h={38} t="engine" label="dockerd · Daemon" size={14} i={2} />
-      {container(cx(2), 4)}
-      <B x={cx(2)} y={168} w={166} h={38} t="gone" label={e('kein Daemon', 'no daemon')} size={14} i={4} />
-
+      {boxed(cx(1), 2)}
+      <B x={cx(1)} y={168} w={166} h={38} t="gone" label={e('nichts: dockerd startet', 'nothing: dockerd starts')} size={12} i={2} />
+      {boxed(cx(2), 4)}
+      <B x={cx(2)} y={168} w={166} h={38} t="gone" label={e('nichts, kein Daemon', 'nothing, no daemon')} size={12} i={4} />
       <Zone x={cx(3)} y={44} w={166} h={116} t="guest" label="VM" i={6} />
       <B x={cx(3) + 10} y={72} w={146} h={36} t="app" label="app.jar · JDK 21" size={13} i={6} />
       <B x={cx(3) + 10} y={114} w={146} h={36} t="kernel" label={e('eigener Kernel', 'own kernel')} size={14} i={6} />
       <B x={cx(3)} y={168} w={166} h={38} t="hyper" label="Hypervisor" size={14} i={6} />
-
       {[0, 1, 2, 3].map(k => <B key={k} x={cx(k)} y={214} w={166} h={38} t="kernel" label={e('Kernel des Rechners', 'Machine’s kernel')} size={13} i={k * 2} />)}
-
       {facts.map(([label, ...vals], r) => {
         const y = 272 + r * 40
         return (
@@ -240,29 +234,135 @@ export const JarVsContainer = () => (
         )
       })}
     </Svg>
-    <Take i={13} label={e('Merke', 'Remember')} text={e('Docker und Podman starten dieselben Images als Prozess mit eigener Umgebung, Podman nur ohne Daemon. Eine VM bootet ein ganzes Betriebssystem mit eigenem Kernel: stärker getrennt, aber schwerer.', 'Docker and Podman start the same images as a process with its own environment, Podman just without a daemon. A VM boots a whole operating system with its own kernel: more strongly separated, but heavier.')} />
+    <Take i={13} label={e('Merke', 'Remember')} text={e('Docker und Podman starten dieselben Images als Prozess direkt auf dem Kernel, Podman nur ohne Hintergrunddienst. Eine VM bootet ein eigenes Betriebssystem: stärker getrennt, aber schwerer.', 'Docker and Podman start the same images as a process directly on the kernel, Podman just without a background service. A VM boots an operating system of its own: more strongly separated, but heavier.')} />
   </div>
 )
+
+/* ── ③ 1 · where images come from: Docker Hub is to images what Maven Central is to libraries ── */
+type Chip = [string, boolean?]
+const chipRow = (x: number, y: number, chips: Chip[]) => {
+  let cx0 = x
+  return chips.map(([l, own]) => {
+    const w = l.length * 7.2 + 16, at = cx0
+    cx0 += w + 8
+    return (
+      <g key={l}>
+        <rect x={at} y={y} width={w} height={26} rx={7} fill={own ? 'var(--svc-api)' : '#fff'} stroke={own ? 'var(--svc-api)' : 'var(--blue)'} strokeWidth={1.5} />
+        <text x={at + w / 2} y={y + 17} fontSize={12} fontWeight={700} fill={own ? '#fff' : 'var(--blue-deep)'} textAnchor="middle" style={mono}>{l}</text>
+      </g>
+    )
+  })
+}
+const source = (x: number, i: number, file: string, lines: string[], hub: string, hubSub: string, hubChips: Chip[], local: string, localChips: Chip[][]) => (
+  <>
+    <In i={i}>
+      <rect x={x} y={0} width={460} height={76} rx={12} fill="#fff3d6" stroke="var(--keel)" strokeWidth={2} />
+      <text x={x + 16} y={24} fontSize={14} fontWeight={700} fill="var(--ink)" style={mono}>{file}</text>
+      {lines.map((l, k) => <text key={k} x={x + 16} y={46 + k * 20} fontSize={12.5} fill="var(--ink)" style={mono}>{l}</text>)}
+    </In>
+    <Arrow d={`M${x + 230} 80 V108`} i={i + 1} />
+    <Label x={x + 242} y={99} anchor="start" size={12.5} tone="muted" i={i + 1}>{e('fragt an', 'asks for')}</Label>
+    <In i={i + 1}>
+      <rect x={x} y={116} width={460} height={96} rx={18} fill="#eef4ff" stroke="var(--blue-deep)" strokeWidth={2} />
+      <Icon name="warehouse" x={x + 14} y={124} s={40} />
+      <Txt x={x + 64} y={142} size={15} w={700} fill="var(--ink)">{hub}</Txt>
+      <Txt x={x + 64} y={160} size={12.5} fill="var(--ink-3)">{hubSub}</Txt>
+      {chipRow(x + 14, 176, hubChips)}
+    </In>
+    <Arrow d={`M${x + 230} 216 V244`} i={i + 2} />
+    <Label x={x + 242} y={235} anchor="start" size={12.5} tone="muted" i={i + 2}>{e('lädt herunter', 'downloads')}</Label>
+    <In i={i + 2}>
+      <rect x={x} y={250} width={460} height={108} rx={14} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
+      <Txt x={x + 16} y={273} size={14} w={700} fill="var(--ink-2)">{local}</Txt>
+      {localChips.map((row, k) => <g key={k}>{chipRow(x + 14, 286 + k * 34, row)}</g>)}
+    </In>
+  </>
+)
+export const Registry = () => (
+  <div className="dg-col">
+    <Svg w={1000} h={362} label={e('Links Java: pom.xml fragt Maven Central an, Bibliotheken landen in ~/.m2. Rechts Docker: Dockerfile und compose.yaml fragen Docker Hub an, Images landen lokal. mensa-backend baust du selbst.', 'Left Java: pom.xml asks Maven Central, libraries land in ~/.m2. Right Docker: Dockerfile and compose.yaml ask Docker Hub, images land locally. You build mensa-backend yourselves.')}>
+      {source(0, 0, 'pom.xml', ['<artifactId>spring-boot-starter-web</artifactId>', '<artifactId>postgresql</artifactId>'], 'Maven Central', e('öffentliches Lager für Bibliotheken', 'public store for libraries'), [['spring-boot-starter-web'], ['postgresql']], e('Dein Rechner · ~/.m2', 'Your machine · ~/.m2'), [[['spring-boot-starter-web-3.4.1.jar']], [['postgresql-42.7.4.jar']]])}
+      {source(540, 3, 'Dockerfile · compose.yaml', ['FROM maven:3.9-eclipse-temurin-21', 'image: postgres:18'], 'Docker Hub', e('öffentliches Lager für Images', 'public store for images'), [['maven:3.9-eclipse-temurin-21'], ['postgres:18']], e('Dein Rechner · lokale Images', 'Your machine · local images'), [[['maven:3.9-eclipse-temurin-21'], ['postgres:18']], [[e('mensa-backend · selbst gebaut', 'mensa-backend · built yourselves'), true]]])}
+      <In i={4}><Txt x={500} y={176} size={34} w={700} fill="var(--ink-3)" anchor="middle">≈</Txt></In>
+    </Svg>
+    <Take i={6} label={e('Merke', 'Remember')} text={e('Docker Hub ist für Images, was Maven Central für Bibliotheken ist: `FROM` und `image:` laden fertige Images herunter. Dein eigenes Image baust du selbst.', 'Docker Hub is to images what Maven Central is to libraries: `FROM` and `image:` download ready images. You build your own image yourselves.')} />
+  </div>
+)
+
+/* ── ③ 2 · what gets added at start: the image stays fixed, port, settings and data come with docker run ── */
+export const RunOptions = () => (
+  <div className="dg-col">
+    <Svg w={1000} h={384} label={e('docker run startet das Image postgres:18 als Container db. Beim Start kommen dazu: mit -p ein Host-Port, mit -e eine Umgebungsvariable, mit -v ein Volume außerhalb des Containers.', 'docker run starts the image postgres:18 as the container db. At start it gets: a host port with -p, an environment variable with -e, a volume outside the container with -v.')}>
+      <In i={0}>
+        <rect x={0} y={0} width={1000} height={44} rx={10} fill="#0f1b2d" />
+        <text x={16} y={27} fontSize={12.5} style={mono}>
+          <tspan fill="#cbd5e1">$ docker run -d --name db </tspan><tspan fill="#4ade80" fontWeight={700}>-p 5432:5432</tspan><tspan fill="#cbd5e1"> </tspan><tspan fill="#fbbf24" fontWeight={700}>-e POSTGRES_PASSWORD=geheim</tspan><tspan fill="#cbd5e1"> </tspan><tspan fill="#c4b5fd" fontWeight={700}>-v dbdata:/var/lib/postgresql</tspan><tspan fill="#fff"> postgres:18</tspan>
+        </text>
+        <rect x={0} y={64} width={1000} height={316} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
+        <Txt x={16} y={87} size={14} w={700} fill="var(--ink-2)">{e('Dein Rechner', 'Your machine')}</Txt>
+      </In>
+      <Ctr x={30} y={166} w={220} h={120} name="Image postgres:18" i={1} />
+      <B x={44} y={198} w={192} h={32} t="app" label="Postgres 18" size={14} i={1} />
+      <B x={44} y={238} w={192} h={32} t="libs" label="Linux-Basis" size={14} i={1} />
+      <In i={1}><Txt x={140} y={312} size={12.5} fill="var(--ink-3)" anchor="middle">{e('fest, für alle gleich', 'fixed, the same for all')}</Txt></In>
+      <Arrow d="M258 236 H382" i={2} />
+      <Label x={320} y={224} size={12} weight={700} mono i={2}>docker run</Label>
+      <In i={2}>
+        <rect x={390} y={166} width={260} height={140} rx={12} fill="#fff" stroke="var(--svc-db)" strokeWidth={2.5} />
+        <Txt x={404} y={188} size={14} w={700} fill="var(--svc-db-d)">Container db</Txt>
+      </In>
+      <B x={404} y={202} w={232} h={36} t="app" label={e('Prozess: postgres', 'process: postgres')} size={13.5} i={2} />
+      <B x={404} y={252} w={232} h={36} t="gone" label="/var/lib/postgresql" size={12.5} mono i={2} />
+
+      <B x={440} y={96} w={160} h={32} t="ok" label={e(':5432 · Host-Port', ':5432 · host port')} size={13} i={3} />
+      <Arrow d="M520 132 V157" kind="ok" i={3} />
+      <Label x={610} y={117} anchor="start" size={12.5} weight={700} mono tone="ok" i={3}>-p 5432:5432</Label>
+
+      <In i={4}>
+        <rect x={700} y={166} width={280} height={64} rx={10} fill="#fff3d6" stroke="#e6c27a" strokeWidth={1.5} />
+        <Txt x={714} y={186} size={12.5} w={700} fill="#8a6a20">{e('-e · Umgebungsvariable', '-e · environment variable')}</Txt>
+        <text x={714} y={214} fontSize={13} fill="var(--ink)" style={mono}>POSTGRES_PASSWORD=geheim</text>
+      </In>
+      <Arrow d="M696 198 H658" i={4} />
+
+      <In i={5}>
+        <path d="M760 256 V316 A80 10 0 0 0 920 316 V256" fill="#efeaff" stroke="var(--svc-db)" strokeWidth={2} />
+        <ellipse cx={840} cy={256} rx={80} ry={10} fill="#f6f3ff" stroke="var(--svc-db)" strokeWidth={2} />
+        <Txt x={840} y={294} size={13.5} w={700} fill="var(--svc-db-d)" anchor="middle">Volume dbdata</Txt>
+        <text x={840} y={350} fontSize={12} fontWeight={700} fill="var(--svc-db-d)" textAnchor="middle" style={mono}>-v dbdata:/var/lib/postgresql</text>
+      </In>
+      <Arrow d="M642 272 L752 286" kind="mute" both i={5} />
+    </Svg>
+    <Take i={6} label={e('Merke', 'Remember')} text={e('Das Image bleibt fest und für alle gleich. Was je Rechner anders ist, hängst du beim Start an: Ports mit `-p`, Einstellungen mit `-e`, Daten mit `-v`.', 'The image stays fixed and the same for all. What differs per machine you attach at start: ports with `-p`, settings with `-e`, data with `-v`.')} />
+  </div>
+)
+
 
 /* ── ② 3 · the one commands slide ── */
 export const Commands = () => (
   <div className="dg-col">
     <div className="dg-col">
       <Code title="Dockerfile" kind="file" lines={[
-        { t: 'FROM eclipse-temurin:21-jre', chip: e('Linux mit JDK 21', 'Linux with JDK 21') },
-        { t: 'COPY target/app.jar /app.jar', chip: e('eure App hinein', 'your app inside') },
+        { t: 'FROM maven:3.9-eclipse-temurin-21', chip: e('Linux mit JDK 21 und Maven', 'Linux with JDK 21 and Maven') },
+        { t: 'WORKDIR /app', chip: e('Arbeitsordner im Image', 'working folder in the image') },
+        { t: 'COPY . .', chip: e('dein Quellcode hinein', 'your source code inside') },
+        { t: 'RUN mvn -q package -DskipTests', chip: e('im Image bauen', 'build in the image') },
+        { t: 'RUN cp target/*.jar app.jar', chip: e('Jar umbenennen', 'rename the jar') },
         { t: 'EXPOSE 8080', chip: e('Port der App', 'port of the app') },
-        { t: 'CMD ["java", "-jar", "/app.jar"]', chip: e('so startet sie', 'how it starts') },
+        { t: 'CMD ["java", "-jar", "app.jar"]', chip: e('so startet sie', 'how it starts') },
       ]} />
       <Code title="Terminal" i={1} lines={[
-        { t: 'docker build -t mensa-api:1.0 .', k: 'cmd', chip: e('Image bauen', 'build image') },
-        { t: 'docker run -d -p 8080:8080 --name api mensa-api:1.0', k: 'cmd', chip: e('starten', 'start') },
-        { t: 'docker stop api', k: 'cmd', chip: e('anhalten', 'stop') },
-        { t: 'docker rm api', k: 'cmd', chip: e('entfernen', 'remove') },
+        { t: 'docker pull postgres:18', k: 'cmd', chip: e('Image herunterladen', 'download image') },
+        { t: 'docker build -t mensa-backend:1.0 .', k: 'cmd', chip: e('Image bauen', 'build image') },
+        { t: 'docker run -d -p 8080:8080 --name backend mensa-backend:1.0', k: 'cmd', chip: e('starten', 'start') },
+        { t: 'docker ps', k: 'cmd', chip: e('laufende Container anzeigen', 'show running containers') },
+        { t: 'docker logs backend', k: 'cmd', chip: e('Ausgaben lesen', 'read the output') },
+        { t: 'docker stop backend', k: 'cmd', chip: e('anhalten', 'stop') },
+        { t: 'docker rm backend', k: 'cmd', chip: e('entfernen', 'remove') },
       ]} />
     </div>
     <Svg w={1000} h={120} label={e('Was die Teile von docker run bedeuten', 'What the parts of docker run mean')}>
-      {([['-d', e('im Hintergrund', 'in the background')], ['-p 8080:8080', e('Port: Rechner → Container', 'port: machine → container')], ['--name api', e('Name des Containers', 'name of the container')], ['mensa-api:1.0', e('welches Image', 'which image')]] as const).map(([c, l], k) => (
+      {([['-d', e('im Hintergrund', 'in the background')], ['-p 8080:8080', e('Host-Port → Container-Port', 'host port → container port')], ['--name backend', e('Name des Containers', 'name of the container')], ['mensa-backend:1.0', e('welches Image', 'which image')]] as const).map(([c, l], k) => (
         <In key={c} i={2 + k}>
           <rect x={k * 250} y={10} width={236} height={86} rx={14} fill="#fff" stroke="var(--line)" strokeWidth={1.5} />
           <text x={k * 250 + 118} y={44} textAnchor="middle" fontSize={16} style={{ fontFamily: "var(--mono)" }} fontWeight={700} fill="var(--blue-deep)">{c}</text>

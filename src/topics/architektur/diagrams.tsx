@@ -5,6 +5,7 @@ import { t } from '../../i18n.ts'
 import { Code, type Line } from '../../components/Code.tsx'
 import { Visuals } from '../../components/Visuals.tsx'
 import './diagrams.css'
+import { e } from '../../components/quizModel.ts'
 
 // Detailed diagrams for the deeper sub-chapters of this topic. The overview sub-chapter draws with views.tsx.
 
@@ -209,8 +210,8 @@ export const Platforms = () => (
     <Stack d={2} size="s" title="macOS" sub="Eine Engine startet eine Linux-VM" rows={[
       'hardware', { part: 'kernel', sub: 'macOS: kein Linux' }, { part: 'hypervisor', sub: 'von macOS' }, linuxVm('z. B. Docker Desktop, Colima'),
     ]} />
-    <Stack d={4} size="s" title="Windows" sub="Eine Engine startet eine Linux-VM" rows={[
-      'hardware', { part: 'kernel', sub: 'Windows: kein Linux' }, { part: 'hypervisor', sub: 'von Windows' }, linuxVm('z. B. Docker Desktop, WSL 2'),
+    <Stack d={4} size="s" title="Windows" sub={e('Linux-Container in einer Linux-VM, Windows-Container direkt', 'Linux containers in a Linux VM, Windows containers directly')} rows={[
+      'hardware', { part: 'kernel', sub: 'Windows: kein Linux' }, { part: 'hypervisor', sub: 'von Windows' }, linuxVm(e('Docker Desktop, VM über WSL 2', 'Docker Desktop, VM via WSL 2')),
     ]} />
   </div>
 )

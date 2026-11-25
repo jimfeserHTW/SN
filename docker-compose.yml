@@ -1,6 +1,8 @@
 services:
   web:
-    build: .
+    build:
+      context: .              # Ordner, den Docker beim Bauen sieht (hier: Projektwurzel)
+      dockerfile: Dockerfile  # Pfad relativ zum context
     ports:
       - "8080:80"
     restart: unless-stopped

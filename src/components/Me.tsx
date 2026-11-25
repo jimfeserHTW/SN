@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { deckOf, path, topics, type Entry } from '../content.ts'
 import { QUIZZES } from '../quizzes.ts'
 import { LABS, LAB_LEVELS } from '../labs.ts'
+import { Share } from './Share.tsx'
 import { activity, latestAt, load, resetSlides, seenAt, setFullscreen, type Me } from './me.ts'
 
 const pct = (a: number, b: number) => b ? Math.round(a / b * 100) : 0
@@ -291,16 +292,16 @@ function Settings() {
   )
 }
 
-/** #/me shows the statistics, #/me/settings the settings. */
+/** #/me shows the statistics, #/me/settings the settings, #/me/share the QR codes. */
 export function MeRoute({ id }: { id?: string }) {
   const { t } = useTranslation()
-  const settings = id === 'settings'
+  const settings = id === 'settings', share = id === 'share'
   return (
     <div className="page me-page">
       <a className="crumb" href="#/me">{t('nav.me')}</a>
-      <h1>{t(settings ? 'Settings' : 'Statistics')}</h1>
-      <p className="lead">{t('Stored only in this browser. Clearing the site data deletes it.')}</p>
-      {settings ? <Settings /> : <Stats />}
+      <h1>{t(share ? 'Share StudyNothing' : settings ? 'Settings' : 'Statistics')}</h1>
+      <p className="lead">{t(share ? 'Scan with your phone: the source code on GitHub, or the learning platform itself.' : 'Stored only in this browser. Clearing the site data deletes it.')}</p>
+      {share ? <Share /> : settings ? <Settings /> : <Stats />}
     </div>
   )
 }

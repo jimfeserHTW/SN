@@ -3,6 +3,7 @@ import { Svg, Box, Arrow, Label, Ctr, Tick, Zone, Take, type BoxTone } from '../
 import { Icon } from '../../components/Icons.tsx'
 import { t } from '../../i18n.ts'
 import './diagrams.css'
+import { e } from '../../components/quizModel.ts'
 
 // Detailed diagrams for the deeper sub-chapters of this topic. The overview sub-chapter draws with views.tsx.
 
@@ -48,6 +49,7 @@ export const Volumes = () => (
         ))}</tbody>
       </table>
       <p className="legend" style={at(13)}>{t('* Images wie postgres legen dann ein anonymes Volume an: Es bleibt liegen, der neue Container findet es aber nicht wieder.')}</p>
+      <p className="legend" style={at(13)}>{t(e('Unter Docker Desktop (macOS, Windows) liegt /var/lib/docker in der Linux-VM, nicht auf eurer eigenen Platte.', 'With Docker Desktop (macOS, Windows) /var/lib/docker lives inside the Linux VM, not on your own disk.'))}</p>
     </div>
   </div>
 )

@@ -13,7 +13,9 @@ export const LookInside = () => (
       { t: 'docker exec -it api sh', k: 'cmd', n: 2 },
       e('/ $ ls /app.jar   # im Container', '/ $ ls /app.jar   # inside the container'),
       { t: 'docker inspect api', k: 'cmd', n: 3 },
-      '"IPAddress": "172.18.0.3", "Image": "mensa-api:1.0"',
+      '"Image": "mensa-api:1.0",',
+      '"Networks": { "mensa_default": {',
+      '    "IPAddress": "172.18.0.3" } }',
     ]} />
     <div className="dg-col">
       <Svg w={520} h={360} label={e('Wohin die drei Befehle schauen: Ausgabe des Prozesses, ein neuer Prozess im Container, Daten von dockerd', 'Where the three commands look: output of the process, a new process in the container, data from dockerd')}>

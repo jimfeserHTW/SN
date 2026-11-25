@@ -1,0 +1,20 @@
+/* Looping crash charts. The static state is the crash, so reduced motion (animation: none) still shows the result.
+   fast: 3 s growth + 5 s crash = 8 s; slow: 11 s growth + 5 s crash = 16 s. */
+.cr-line { fill: none; stroke: var(--svc-api); stroke-width: 3; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.cr-up { opacity: 0; }
+.cr[data-speed='fast'] .cr-line { animation: cr-draw-fast 8s linear infinite; }
+.cr[data-speed='fast'] .cr-dead { animation: cr-dead-fast 8s step-end infinite; }
+.cr[data-speed='fast'] .cr-up { animation: cr-up-fast 8s step-end infinite; }
+.cr[data-speed='slow'] .cr-line { animation: cr-draw-slow 16s linear infinite; }
+.cr[data-speed='slow'] .cr-dead { animation: cr-dead-slow 16s step-end infinite; }
+.cr[data-speed='slow'] .cr-up { animation: cr-up-slow 16s step-end infinite; }
+@keyframes cr-draw-fast { 0% { stroke-dashoffset: 1; } 37.5%, 100% { stroke-dashoffset: 0; } }
+@keyframes cr-dead-fast { 0% { opacity: 0; } 37.5% { opacity: 1; } }
+@keyframes cr-up-fast { 0% { opacity: 1; } 37.5% { opacity: 0; } }
+@keyframes cr-draw-slow { 0% { stroke-dashoffset: 1; } 68.75%, 100% { stroke-dashoffset: 0; } }
+@keyframes cr-dead-slow { 0% { opacity: 0; } 68.75% { opacity: 1; } }
+@keyframes cr-up-slow { 0% { opacity: 1; } 68.75% { opacity: 0; } }
+
+/* "now" cursor on the start timeline: 10 s sweep, 3 s hold at the end. */
+.cr-now { transform: translateX(760px); animation: cr-sweep 13s linear infinite; }
+@keyframes cr-sweep { 0% { transform: translateX(0); } 77% , 100% { transform: translateX(760px); } }

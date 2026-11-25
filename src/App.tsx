@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { deckOf, findEntry, path, topics } from './content.ts'
-import { Header, Mark } from './components/Header.tsx'
+import { Header, Logo } from './components/Header.tsx'
 import { LEGAL, LegalView, SOURCE, type LegalId } from './components/Legal.tsx'
 import { Landing } from './components/Landing.tsx'
 import { ChapterView, TopicView } from './components/Pages.tsx'
@@ -18,7 +18,7 @@ import { LABS, LAB_LEVELS } from './labs.ts'
 //   #/<topic>/<sub>/<n>         presentation, slide n (1-based)
 //   #/quiz[/<topic>[/<sub>]]    quiz of a sub-chapter (default: the first one)
 //   #/labs[/<level>|/<lab>]     labs, or the free Docker sandbox (#/labs/sandbox)
-//   #/me[/settings]             my area: statistics, or settings
+//   #/me[/settings|/share]      my area: statistics, settings, or share QR codes
 // Chapter ids before the topic structure. Old links land on the topic that now holds those slides.
 const LEGACY: Record<string, string> = { basics: 'einfuehrung', 'einfuehrung-docker': 'einfuehrung', 'einfuehrung-compose': 'einfuehrung', 'deep-dive': 'architektur', 'compose-deep-dive': 'compose', 'docker-internals': 'architektur', 'compose-internals': 'compose' }
 const parse = (hash: string) => {
@@ -60,7 +60,7 @@ export default function App() {
       <main id="main">{chapter ? <ChapterView chapter={chapter} /> : topic ? <TopicView topic={topic} /> : legal ? <LegalView id={legal} /> : labs ? <LabsRoute id={labId} /> : quiz ? <QuizRoute topic={quiz.topic} id={quiz.id} /> : me ? <MeRoute key={me} id={me} /> : <Landing />}</main>
       <footer className="foot">
         <div className="foot-in">
-          <a className="brand" href="#/" aria-label={tr('home')}><Mark />StudyNothing</a>
+          <a className="brand" href="#/" aria-label={tr('home')}><Logo open /></a>
           <nav className="foot-nav" aria-label={tr('Legal')}>
             {(Object.keys(LEGAL) as LegalId[]).map(k => <a key={k} href={`#/${k}`}>{tr(LEGAL[k].title)}</a>)}
             <a href={SOURCE}>{tr('Source code')}</a>

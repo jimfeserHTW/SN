@@ -60,7 +60,7 @@ export const LABS: Lab[] = [
       { label: 'nginx lauscht im Container auf Port `80`. Veröffentliche ihn auf Host-Port `8080`.', cmd: `docker run -d --name web -p 8080:${BLANK} nginx:alpine`, hint: 'Falscher Port? Entferne den Container mit `docker rm -f web` und starte neu.', test: x => up(x, 'web') && publishes(box(x, 'web'), 8080, 80) },
       { label: 'Rufe die Seite über den Host-Port `8080` ab.', cmd: `curl localhost:${BLANK}`, test: x => x.saw(NGINX_PAGE) },
       { label: 'Halte den Container `web` mit dem Befehl `stop` an.', cmd: `docker ${BLANK} web`, test: x => box(x, 'web')?.status === 'exited' },
-      { label: 'Lösche den angehaltenen Container `web`.', cmd: `docker rm ${BLANK}`, test: x => gone(x, 'web') },
+      { label: 'Lösche den gestoppten Container `web`.', cmd: `docker rm ${BLANK}`, test: x => gone(x, 'web') },
     ],
   },
   {

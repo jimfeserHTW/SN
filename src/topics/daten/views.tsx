@@ -84,7 +84,7 @@ export const PassThrough = () => (
 /* ── tmpfs: data only in memory ── */
 export const Scratch = () => (
   <div className="dg-col">
-    <Svg w={1000} h={300} label={e('Ein tmpfs im Arbeitsspeicher des Containers ist nach dem Anhalten leer', 'A tmpfs in the container’s memory is empty after stopping')}>
+    <Svg w={1000} h={300} label={e('Ein tmpfs im Arbeitsspeicher des Containers ist nach dem Stoppen leer', 'A tmpfs in the container’s memory is empty after stopping')}>
       {[0, 1].map(k => (
         <g key={k}>
           <Box x={110 + k * 480} y={112} w={280} h={118} svc="api" i={k * 2} />
@@ -95,7 +95,7 @@ export const Scratch = () => (
       <Go d="M400 170 H580" i={1} />
       <In i={1}><text x={490} y={158} textAnchor="middle" fontSize={15} fontWeight={700} fill="var(--ink)" style={{ fontFamily: 'var(--mono)' }}>docker stop</text></In>
       <Mark x={830} y={24} bad i={2} />
-      <Tag x={110} y={250} w={780} label={e('tmpfs liegt nur im Arbeitsspeicher: schnell, nie auf der Platte, weg beim Anhalten', 'tmpfs lives only in memory: fast, never on disk, gone when stopped')} tone="sand" i={3} />
+      <Tag x={110} y={250} w={780} label={e('tmpfs liegt im Arbeitsspeicher: schnell, nicht im Volume oder Image, weg beim Stoppen', 'tmpfs lives in memory: fast, not in a volume or image, gone when stopped')} tone="sand" i={3} />
     </Svg>
   </div>
 )
@@ -104,7 +104,7 @@ export const Scratch = () => (
 const kinds: { title: string; tech: string; use: string; life: string; tone: 'ok' | 'sand' | 'bad' | undefined; icon: ReactNode }[] = [
   { title: 'Volume', tech: e('von Docker verwaltet', 'managed by Docker'), use: e('Datenbank, Uploads', 'database, uploads'), life: e('bleibt, bis ihr es löscht', 'stays until you delete it'), tone: 'ok', icon: <Disk x={70} y={66} w={100} label="dbdata" /> },
   { title: 'Bind Mount', tech: e('Ordner vom Rechner', 'folder from the machine'), use: e('Quellcode beim Entwickeln', 'source code while developing'), life: e('liegt bei dir, bleibt immer', 'lives with you, always stays'), tone: 'ok', icon: <Icon name="folder" x={88} y={66} s={64} /> },
-  { title: 'tmpfs', tech: e('nur im Arbeitsspeicher', 'only in memory'), use: e('Zwischenstände, Cache', 'scratch data, cache'), life: e('weg beim Anhalten', 'gone when stopped'), tone: 'sand', icon: <Ram x={70} y={74} w={100} h={40} /> },
+  { title: 'tmpfs', tech: e('nur im Arbeitsspeicher', 'only in memory'), use: e('Zwischenstände, Cache', 'scratch data, cache'), life: e('weg beim Stoppen', 'gone when stopped'), tone: 'sand', icon: <Ram x={70} y={74} w={100} h={40} /> },
   { title: e('Schreibschicht', 'Writable layer'), tech: e('im Container selbst', 'inside the container'), use: e('nichts, was ihr behalten wollt', 'nothing you want to keep'), life: e('weg mit docker rm', 'gone with docker rm'), tone: 'bad', icon: <Box x={64} y={70} w={112} h={46} svc="api" /> },
 ]
 export const Which = () => (

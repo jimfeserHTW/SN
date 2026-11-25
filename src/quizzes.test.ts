@@ -9,7 +9,7 @@ const chapters = Object.entries(QUIZZES).flatMap(([topic, subs]) => Object.entri
 const all = chapters.flatMap(({ id, tasks }) => tasks.map(task => ({ id, task })))
 
 test('every sub-chapter has a bundle of at least three tasks, mixing kinds', () => {
-  assert.equal(Object.keys(QUIZZES).length, 7)
+  assert.equal(Object.keys(QUIZZES).length, 8)
   for (const { id, tasks } of chapters) {
     assert.ok(tasks.length >= 3, `${id} has ${tasks.length} tasks`)
     assert.ok(new Set(tasks.map(t => t.kind)).size >= 2, `${id} uses one kind only`)

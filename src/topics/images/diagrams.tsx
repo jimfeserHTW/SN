@@ -1,5 +1,6 @@
 import { at } from '../../components/Stack.tsx'
 import { Svg, Box, Arrow, Label, Zone, Wire, Ctr, Tick, Take } from '../../components/Svg.tsx'
+import { e } from '../../components/quizModel.ts'
 import { Icon } from '../../components/Icons.tsx'
 
 // Detailed diagrams for the deeper sub-chapters of this topic. The overview sub-chapter draws with views.tsx.
@@ -144,7 +145,7 @@ export const SharedLayers = () => (
 export const BuildFlow = () => (
   <div className="dg-col">
     <Svg w={1000} h={400} label="build: Der Ordner geht als Kontext zu BuildKit, Stufen werden gebaut, das Ergebnis wird zum Image">
-      <Zone x={0} y={0} w={220} h={300} t="reg" label="Ordner ./api" />
+      <Zone x={0} y={0} w={220} h={300} t="reg" label="Ordner ./frontend" />
       {['src/', 'package.json', 'Dockerfile'].map((f, k) => <Box key={f} x={14} y={40 + k * 52} w={192} h={44} label={f} size={14} mono />)}
       <Box i={1} x={14} y={196} w={192} h={56} t="gone" label="node_modules/" sub="per .dockerignore raus" size={14} mono />
       <Arrow i={2} d="M222 120 H276" label="Kontext" lx={249} ly={108} />
@@ -159,9 +160,9 @@ export const BuildFlow = () => (
       <Box i={6} x={510} y={254} w={196} h={60} t="gone" label="Stufe debug" sub="wird nicht gebaut" size={14} />
       <Label i={6} x={500} y={352} size={14} weight={700} tone="blue">target: runtime · hier ist Schluss</Label>
       <Arrow i={7} d="M708 120 H756" />
-      <Box i={7} x={760} y={84} w={240} h={76} t="libs" label="mensa/api:1.4" sub="fertiges Image" size={15} mono />
+      <Box i={7} x={760} y={84} w={240} h={76} t="libs" label="mensa-frontend:1.4" sub="fertiges Image" size={15} mono />
       <Arrow i={8} d="M880 162 V216" label="startet" lx={892} ly={194} anchor="start" />
-      <Box i={8} x={760} y={220} w={240} h={70} t="container" label="Container api" sub="ohne node, ohne Quellcode" size={15} />
+      <Box i={8} x={760} y={220} w={240} h={70} t="container" label={e('Container frontend', 'Container frontend')} sub="ohne node, ohne Quellcode" size={15} />
     </Svg>
   </div>
 )
@@ -170,7 +171,7 @@ export const BuildFlow = () => (
 /* Every object you know, and the folder it really is. */
 const dRows: { y: number; p: string; s: string; keep: boolean }[] = [
   { y: 60, p: 'overlay2/a3f…/diff', s: 'Dateien eines Image-Layers', keep: true },
-  { y: 164, p: 'overlay2/e5f…/diff', s: 'Schreibschicht von frontend', keep: false },
+  { y: 164, p: 'overlay2/7c1…/diff', s: 'Schreibschicht von frontend', keep: false },
   { y: 216, p: 'containers/e5f…/config.v2.json', s: 'Konfiguration des Containers', keep: false },
   { y: 268, p: 'containers/e5f…/e5f…-json.log', s: 'alles, was docker logs zeigt', keep: false },
   { y: 372, p: 'volumes/daten/_data', s: 'der Inhalt des Volumes', keep: true },
