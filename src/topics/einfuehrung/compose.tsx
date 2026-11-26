@@ -84,7 +84,7 @@ export const ByHand = () => (
 /* ── ① 2 · one compose.yaml for the whole team: each failure of the slide before is solved in one line ── */
 const yaml: [string, string?][] = [
   ['services:'], ['  frontend:'], ['    build: ./frontend   # selbst bauen'], ['    ports: ["8080:8080"]', e('✓ Port', '✓ port')],
-  ['  backend:'], ['    build: ./backend    # selbst bauen'], ['    environment:'], ['      DB_HOST: db'], ['    depends_on: [db]', e('✓ Reihenfolge', '✓ order')],
+  ['  backend:'], ['    build: ./backend    # selbst bauen'], ['    expose: ["80"]        # nur im Netz'], ['    environment:'], ['      DB_HOST: db'], ['    depends_on: [db]', e('✓ Reihenfolge', '✓ order')],
   ['  db:'], ['    image: postgres:18  # vom Docker Hub'], ['    expose: ["5432"]      # nur im Netz'], ['    volumes: [dbdata:/var/lib/postgresql]'], ['volumes: { dbdata: }'],
 ]
 // e() hands back the German text; w must fit the longer of both languages
@@ -94,9 +94,9 @@ const pill = (x: number, y: number, label: string, i: number, w = label.length *
 const team = [e('Lenas Laptop · macOS', 'Lena’s laptop · macOS'), e('Tims Laptop · Windows', 'Tim’s laptop · Windows'), e('Abgabe-Server · Linux', 'Hand-in server · Linux')]
 export const ComposeFile = () => (
   <div className="dg-col">
-    <Svg w={1000} h={372} label={e('Links die compose.yaml mit Port, Startreihenfolge und automatischem Netz. Rechts drei Rechner, die mit docker compose up dieselben drei verbundenen Container starten.', 'Left the compose.yaml with port, start order and automatic network. Right three machines that start the same three connected containers with docker compose up.')}>
+    <Svg w={1000} h={392} label={e('Links die compose.yaml mit Port, Startreihenfolge und automatischem Netz. Rechts drei Rechner, die mit docker compose up dieselben drei verbundenen Container starten.', 'Left the compose.yaml with port, start order and automatic network. Right three machines that start the same three connected containers with docker compose up.')}>
       <In i={0}>
-        <rect x={0} y={0} width={400} height={368} rx={14} fill="#fff3d6" stroke="var(--keel)" strokeWidth={2} />
+        <rect x={0} y={0} width={400} height={388} rx={14} fill="#fff3d6" stroke="var(--keel)" strokeWidth={2} />
         <text x={16} y={28} fontSize={16} fontWeight={700} fill="var(--ink)" style={mono}>compose.yaml</text>
         <Txt x={384} y={28} size={13} fill="#8a6a20" anchor="end">{e('im Repo', 'in the repo')}</Txt>
         {yaml.map(([l], k) => {
@@ -106,10 +106,10 @@ export const ComposeFile = () => (
       </In>
       {yaml.map(([, fix], k) => fix && pill(388, 58 + k * 20, fix, k < 5 ? 1 : 2))}
       <In i={3}>
-        <path d="M16 330 H384" stroke="#e6c27a" strokeWidth={1.5} />
+        <path d="M16 350 H384" stroke="#e6c27a" strokeWidth={1.5} />
       </In>
-      {pill(108, 353, e('✓ Netz', '✓ network'), 3, 92)}
-      <In i={3}><Txt x={118} y={354} size={12.5} fill="#8a6a20">{e('kein Eintrag nötig: legt Compose an', 'no entry needed: Compose creates it')}</Txt></In>
+      {pill(108, 373, e('✓ Netz', '✓ network'), 3, 92)}
+      <In i={3}><Txt x={118} y={374} size={12.5} fill="#8a6a20">{e('kein Eintrag nötig: legt Compose an', 'no entry needed: Compose creates it')}</Txt></In>
       {team.map((host, k) => {
         const y = k * 118
         return (
@@ -287,6 +287,7 @@ export const Commands = () => (
       '    build:',
       '      context: ./backend',
       '      dockerfile: Dockerfile',
+      { t: '    expose: ["80"]', chip: e('Port nur im Netz', 'port only in the network') },
       { t: '    environment:', chip: e('Umgebungsvariablen', 'environment variables') },
       '      DB_HOST: db',
       { t: '    depends_on:', chip: e('wartet auf healthy', 'waits for healthy') },

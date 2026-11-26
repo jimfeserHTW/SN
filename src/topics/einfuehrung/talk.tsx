@@ -371,7 +371,7 @@ const Check = ({ done, onCheck, onReset }: { done: boolean; onCheck: () => void;
 /* ── compose.yaml, one key at a time: the highlight moves, the file stays ── */
 const yaml: [string, number][] = [
   ['services:', 0], ['  frontend:', 0], ['    build: ./frontend', 0], ['    ports: ["8080:8080"]', 1],
-  ['  backend:', 0], ['    build: ./backend', 0], ['    environment:', 2], ['      DB_HOST: db', 2], ['    depends_on: [db]', 3],
+  ['  backend:', 0], ['    build: ./backend', 0], ['    expose: ["80"]', 1], ['    environment:', 2], ['      DB_HOST: db', 2], ['    depends_on: [db]', 3],
   ['  db:', 0], ['    image: postgres:18', 0], ['    expose: ["5432"]', 1], ['    environment:', 2], ['      POSTGRES_PASSWORD: geheim', 2], ['    volumes: [dbdata:/var/lib/postgresql]', 4],
   ['volumes: { dbdata: }', 4],
 ]
@@ -383,14 +383,14 @@ const runs = yaml.reduce<{ sec: number; from: number; len: number }[]>((acc, [, 
 }, [])
 const keys: [string, string, [string, string]][] = [
   ['services', e('die Container', 'the containers'), [e('Ein Eintrag pro Container: mit build:', 'One entry per container: built yourself'), e('selbst gebaut, mit image: geladen.', 'with build:, downloaded with image:.')]],
-  ['ports', e('Ports, außen und innen', 'ports, outside and inside'), [e('ports 8080:8080: Host-Port → Container-Port.', 'ports 8080:8080: host port → container port.'), e('expose 5432: Port nur im Docker-Netz.', 'expose 5432: port only in the Docker network.')]],
+  ['ports', e('Ports, außen und innen', 'ports, outside and inside'), [e('ports 8080:8080: Host-Port → Container-Port.', 'ports 8080:8080: host port → container port.'), e('expose 80 / 5432: Port nur im Docker-Netz.', 'expose 80 / 5432: port only in the Docker network.')]],
   ['environment', e('Einstellungen', 'Settings'), [e('Einstellungen als Umgebungsvariablen,', 'Settings as environment variables,'), e('zum Beispiel DB_HOST = db.', 'for example DB_HOST = db.')]],
   ['depends_on', e('Reihenfolge', 'order'), [e('Startreihenfolge: erst db,', 'Start order: first db,'), e('dann backend.', 'then backend.')]],
   ['volumes', e('Daten, die bleiben', 'data that stays'), [e('Daten liegen außerhalb des Containers', 'Data lives outside the container'), e('und überleben down und up.', 'and survives down and up.')]],
 ]
 export const Anatomy = ({ focus }: { focus: number }) => (
-  <Svg w={1000} h={376} label={`compose.yaml: ${keys[focus][0]}. ${t(keys[focus][2][0])} ${t(keys[focus][2][1])}`}>
-    <rect x={0} y={0} width={440} height={372} rx={14} fill="#fff3d6" stroke="var(--keel)" strokeWidth={2} />
+  <Svg w={1000} h={396} label={`compose.yaml: ${keys[focus][0]}. ${t(keys[focus][2][0])} ${t(keys[focus][2][1])}`}>
+    <rect x={0} y={0} width={440} height={392} rx={14} fill="#fff3d6" stroke="var(--keel)" strokeWidth={2} />
     <text x={16} y={26} fontSize={15} fontWeight={700} fill="var(--ink)" style={mono}>compose.yaml</text>
     {runs.map((r, k) => <rect key={k} className="tr" x={8} y={56 + r.from * 20 - 15} width={424} height={r.len * 20} rx={4} fill="#dbe7ff" style={{ opacity: r.sec === focus ? 1 : 0 }} />)}
     {yaml.map(([l, sec], k) => <text key={k} className="tr-fill" x={16} y={56 + k * 20} fontSize={13.5} fontWeight={sec === focus ? 700 : 400} style={{ fill: sec === focus ? 'var(--ink)' : '#a7b1bf', ...mono }}>{l}</text>)}
