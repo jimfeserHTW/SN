@@ -23,7 +23,7 @@ const en: Record<string, string> = {
   'closeMenu': 'Close menu',
   'lang': 'Language',
   'title': 'Learn Docker and Compose',
-  'footer': '© 2026 StudyNothing. Free software under AGPL-3.0.',
+  'footer': 'StudyNothing. Free software under AGPL-3.0.',
   'Home': 'Home',
   'Legal': 'Legal',
   'Source code': 'Source code',

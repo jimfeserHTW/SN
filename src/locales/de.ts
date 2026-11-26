@@ -52,7 +52,7 @@ const de: Record<string, string> = {
   'closeMenu': 'Menü schließen',
   'lang': 'Sprache',
   'title': 'Docker und Compose lernen',
-  'footer': '© 2026 StudyNothing. Freie Software unter AGPL-3.0.',
+  'footer': 'StudyNothing. Freie Software unter AGPL-3.0.',
   'Home': 'Startseite',
   'Legal': 'Rechtliches',
   'Source code': 'Quellcode',
