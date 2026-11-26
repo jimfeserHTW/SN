@@ -15,7 +15,7 @@ const name = (s: Svc) => (s === 'api' ? 'backend' : s)
 const mono = { fontFamily: 'var(--mono)', fontVariantLigatures: 'none', whiteSpace: 'pre' } as const
 const runs: [string, string[]][] = [
   ['docker run -d --name backend -e DB_HOST=db mensa-backend', ['--network ?']],
-  ['docker run -d --name frontend mensa-frontend', ['-p 8080:80 ?', '--network ?']],
+  ['docker run -d --name frontend mensa-frontend', ['-p 8080:8080 ?', '--network ?']],
   ['docker run -d --name db -e POSTGRES_PASSWORD=geheim -v dbdata:/var/lib/postgresql postgres:18', ['--network ?']],
 ]
 // services left to right, with their start order (backend was typed first)
@@ -73,7 +73,7 @@ export const ByHand = () => (
       {broken(82, 171, 4)}
       {broken(356, 471, 4, e('Name unbekannt', 'name unknown'))}
       {broken(656, 771, 4, e('Name unbekannt', 'name unknown'))}
-      <Tag x={150} y={304} w={230} label={e('kein -p 8080:80', 'no -p 8080:80')} sub={e('der Browser erreicht es nicht', 'the browser cannot reach it')} tone="bad" i={5} />
+      <Tag x={150} y={304} w={230} label={e('kein -p 8080:8080', 'no -p 8080:8080')} sub={e('der Browser erreicht es nicht', 'the browser cannot reach it')} tone="bad" i={5} />
       <Tag x={450} y={304} w={230} label="UnknownHostException: db" sub={e('kein gemeinsames Netz', 'no shared network')} tone="bad" i={5} />
       <Tag x={750} y={304} w={230} label={e('startet als Letztes', 'starts last')} sub={e('das backend hat nicht gewartet', 'the backend did not wait')} tone="sand" i={5} />
     </Svg>
@@ -83,7 +83,7 @@ export const ByHand = () => (
 
 /* ── ① 2 · one compose.yaml for the whole team: each failure of the slide before is solved in one line ── */
 const yaml: [string, string?][] = [
-  ['services:'], ['  frontend:'], ['    build: ./frontend   # selbst bauen'], ['    ports: ["8080:80"]', e('✓ Port', '✓ port')],
+  ['services:'], ['  frontend:'], ['    build: ./frontend   # selbst bauen'], ['    ports: ["8080:8080"]', e('✓ Port', '✓ port')],
   ['  backend:'], ['    build: ./backend    # selbst bauen'], ['    environment:'], ['      DB_HOST: db'], ['    depends_on: [db]', e('✓ Reihenfolge', '✓ order')],
   ['  db:'], ['    image: postgres:18  # vom Docker Hub'], ['    expose: ["5432"]      # nur im Netz'], ['    volumes: [dbdata:/var/lib/postgresql]'], ['volumes: { dbdata: }'],
 ]
@@ -193,153 +193,47 @@ export const Volumes = () => (
 
 
 /* ── ② 1 · db instead of localhost: the host changes, the port stays ── */
-const zoneBox = (x: number, w: number, label: string, sub: string, i: number) => (
-  <In i={i}>
-    <rect x={x} y={0} width={w} height={310} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
-    <Txt x={x + 16} y={23} size={14} w={700} fill="var(--ink-2)">{label}</Txt>
-    <Txt x={x + w - 16} y={23} size={13} fill="var(--ink-3)" anchor="end">{sub}</Txt>
-  </In>
-)
-const ctrFrame = (x: number, w: number, svc: Svc, name: string, i: number) => (
-  <In i={i}>
-    <rect x={x} y={44} width={w} height={180} rx={12} fill="#fff" stroke={`var(--svc-${svc})`} strokeWidth={2.5} />
-    <Txt x={x + 14} y={66} size={14} w={700} fill={`var(--svc-${svc}-d)`}>{name}</Txt>
-  </In>
-)
-/** JDBC URL with the host highlighted; the port is drawn the same in both. */
-const jdbc = (x: number, host: string, i: number) => (
-  <In i={i}>
-    <rect x={x} y={324} width={400} height={40} rx={10} fill="#fff" stroke="var(--line)" strokeWidth={1.5} />
-    <text x={x + 200} y={349} fontSize={14} textAnchor="middle" style={mono}>
-      <tspan fill="var(--ink-3)">jdbc:postgresql://</tspan><tspan fill="var(--ok)" fontWeight={700}>{host}</tspan><tspan fill="var(--blue-deep)" fontWeight={700}>:5432</tspan><tspan fill="var(--ink-3)">/mensa</tspan>
-    </text>
-  </In>
-)
-export const DbNotLocalhost = () => (
+/* ── ② 1 · networks and ports in one picture: browser on top, three containers in the Docker network, the engine's rules, the kernel ── */
+// [service, label, container port, published?, request from the browser]
+const nets: [Svc, string, string, boolean, string][] = [['frontend', 'frontend', '8080', true, 'localhost:8080'], ['api', 'backend', '80', false, 'localhost:80'], ['db', 'db', '5432', false, 'localhost:5432']]
+const nx = (k: number) => 190 + k * 280
+export const Network = () => (
   <div className="dg-col">
-    <Svg w={1000} h={370} label={e('Links auf dem Laptop: Backend und Postgres laufen auf demselben Rechner, localhost:5432 trifft die Datenbank. Rechts mit Compose: localhost:5432 endet im Container backend selbst, dort lauscht nichts. db:5432 führt über das gemeinsame Netz zum Container db.', 'Left on the laptop: backend and Postgres run on the same machine, localhost:5432 hits the database. Right with Compose: localhost:5432 ends in the backend container itself, nothing listens there. db:5432 leads through the shared network to the db container.')}>
-      {zoneBox(0, 400, e('Dein Laptop', 'Your laptop'), e('ohne Docker', 'without Docker'), 0)}
-      <B x={24} y={60} w={352} h={54} t="app" label="java -jar app.jar" sub="Spring-Boot-Backend" size={15} i={0} />
-      <B x={24} y={196} w={352} h={54} t="app" label="Postgres" sub={e('installiert, lauscht auf :5432', 'installed, listens on :5432')} size={15} i={0} />
-      <Arrow d="M200 118 V190" kind="ok" i={0} />
-      <Label x={214} y={159} anchor="start" size={14} weight={700} mono tone="ok" i={0}>localhost:5432</Label>
-      <Mark x={352} y={154} ok r={9} i={0} />
-      <In i={0}><Txt x={200} y={286} size={12.5} fill="var(--ink-3)" anchor="middle">{e('beide auf demselben Rechner', 'both on the same machine')}</Txt></In>
-      {jdbc(0, 'localhost', 1)}
-
-      {zoneBox(440, 560, e('Dein Rechner', 'Your machine'), 'Docker Compose', 2)}
-      {ctrFrame(466, 210, 'api', e('Container backend', 'Container backend'), 2)}
-      {ctrFrame(776, 200, 'db', e('Container db', 'Container db'), 2)}
-      <B x={480} y={76} w={182} h={40} t="app" label="app.jar" size={15} i={2} />
-      <B x={790} y={76} w={172} h={40} t="app" label="Postgres :5432" size={15} i={2} />
-      <In i={2}><Txt x={876} y={180} size={12.5} fill="var(--ink-3)" anchor="middle">{e('im Netz erreichbar als db', 'reachable in the network as db')}</Txt></In>
-      <Wire d="M571 224 V256" i={2} /><Wire d="M876 224 V256" i={2} />
-      <B x={466} y={256} w={510} h={36} t="libs" label={e('gemeinsames Netz: Service-Name = Hostname', 'shared network: service name = host name')} size={13.5} i={2} />
-
-      <Arrow d="M520 120 V164" kind="bad" i={3} />
-      <Label x={534} y={147} anchor="start" size={12.5} weight={700} mono tone="bad" i={3}>localhost:5432</Label>
-      <B x={480} y={170} w={182} h={40} t="bad" label="Connection refused" size={13.5} i={3} />
-      <Arrow d="M664 96 H780" kind="ok" i={4} />
-      <Label x={721} y={86} size={14} weight={700} mono tone="ok" i={4}>db:5432</Label>
-      <Mark x={721} y={118} ok r={9} i={4} />
-      {jdbc(520, 'db', 5)}
-    </Svg>
-    <Take i={6} label={e('Merke', 'Remember')} text={e('Im Container zeigt localhost auf den Container selbst. Die Datenbank erreicht das Backend über ihren Service-Namen: `db:5432` statt `localhost:5432` – nur der Host ändert sich, der Port bleibt.', 'Inside a container localhost points at the container itself. The backend reaches the database by its service name: `db:5432` instead of `localhost:5432` – only the host changes, the port stays.')} />
-  </div>
-)
-
-
-/* ── ② 2 · two port worlds: host ports the operating system (and the browser) knows, container ports only Docker knows ── */
-const hostCol: [Svc, string, string, boolean][] = [['frontend', 'frontend', 'frontend:80', true], ['api', 'backend', 'backend:8080', false], ['db', 'db', 'db:5432', false]]
-const hx = (k: number) => 230 + k * 250
-export const HostPorts = () => (
-  <div className="dg-col">
-    <Svg w={1000} h={336} label={e('Außen der Rechner mit seinen Host-Ports, innen das Docker-Netz mit den Container-Ports. Nur frontend hat den Host-Port 8080, den der Browser als localhost:8080 erreicht. backend:8080 und db:5432 kennt nur Docker.', 'Outside the machine with its host ports, inside the Docker network with the container ports. Only frontend has host port 8080, which the browser reaches as localhost:8080. backend:8080 and db:5432 are known only to Docker.')}>
+    <Svg w={1000} h={478} label={e('Oben der Browser auf dem Rechner mit drei Anfragen. localhost:8080 kommt beim frontend an, weil die Docker Engine eine Port-Regel 8080 → frontend:8080 hat. localhost:80 und localhost:5432 werden abgewiesen, denn backend und db haben keinen Host-Port. Im Docker-Netz erreichen sich die Container über ihre Namen: frontend ruft backend:80, backend ruft db:5432; das DNS der Engine übersetzt den Namen in die Container-IP. Ganz unten der Linux-Kernel.', 'At the top the browser on the machine with three requests. localhost:8080 reaches frontend because the Docker Engine has a port rule 8080 → frontend:8080. localhost:80 and localhost:5432 are refused, since backend and db have no host port. Inside the Docker network the containers reach each other by name: frontend calls backend:80, backend calls db:5432; the engine’s DNS turns the name into the container IP. At the bottom the Linux kernel.')}>
       <In i={0}>
-        <rect x={170} y={0} width={830} height={330} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
-        <Txt x={186} y={23} size={14} w={700} fill="var(--ink-2)">{e('Dein Rechner', 'Your machine')}</Txt>
-        <Txt x={984} y={23} size={13} w={700} fill="var(--ok)" anchor="end">{e('Host-Ports: kennt das Betriebssystem', 'host ports: the operating system knows them')}</Txt>
-        <rect x={200} y={140} width={750} height={170} rx={14} fill="#f7faff" stroke="var(--blue)" strokeWidth={1.5} strokeDasharray="6 4" />
-        <Txt x={216} y={162} size={14} w={700} fill="var(--ink-2)">{e('Docker-Netz', 'Docker network')}</Txt>
-        <Txt x={934} y={162} size={13} w={700} fill="var(--blue-deep)" anchor="end">{e('Container-Ports: kennt nur Docker', 'container ports: only Docker knows them')}</Txt>
+        <rect x={0} y={0} width={1000} height={476} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
+        <Txt x={16} y={23} size={14} w={700} fill="var(--ink-2)">{e('Dein Rechner (Host)', 'Your machine (host)')}</Txt>
+        <Icon name="browser" x={34} y={34} s={48} />
+        <Txt x={58} y={100} size={13} w={700} anchor="middle">Browser</Txt>
+        <rect x={160} y={124} width={824} height={186} rx={14} fill="#f7faff" stroke="var(--blue)" strokeWidth={1.5} strokeDasharray="6 4" />
+        <Txt x={968} y={146} size={14} w={700} fill="var(--ink-2)" anchor="end">{e('Docker-Netz · nur hier gelten die Namen', 'Docker network · names only count here')}</Txt>
       </In>
-      {hostCol.map(([s, label, cport, open], k) => (
-        <g key={s}>
-          {open
-            ? <B x={hx(k) + 20} y={58} w={150} h={34} t="ok" label=":8080" size={15} mono i={1} />
-            : <B x={hx(k) + 20} y={58} w={150} h={34} t="gone" label={e('kein Host-Port', 'no host port')} size={13} i={1} />}
-          <Box x={hx(k)} y={190} w={190} h={56} svc={s} label={label} i={2} />
-          <In i={2}>
-            <rect x={hx(k) + 20} y={262} width={150} height={30} rx={8} fill="#dce9ff" stroke="var(--blue)" strokeWidth={1.5} />
-            <text x={hx(k) + 95} y={282} fontSize={13.5} fontWeight={700} fill="var(--blue-deep)" textAnchor="middle" style={mono}>{cport}</text>
-          </In>
-        </g>
-      ))}
-      <Go d="M424 218 H474" i={2} /><Go d="M674 218 H724" i={2} />
-      <Arrow d="M325 96 V181" kind="ok" i={3} />
-      <Label x={335} y={128} anchor="start" size={13} weight={700} mono tone="ok" i={3}>ports: 8080:80</Label>
-      <In i={4}><Icon name="browser" x={40} y={48} s={56} /><Txt x={68} y={124} size={13} w={700} anchor="middle">Browser</Txt></In>
-      <Arrow d="M100 76 H242" kind="ok" i={4} />
-      <Label x={10} y={164} anchor="start" size={13} weight={700} mono tone="ok" i={5}>localhost:8080</Label>
-      <Mark x={150} y={160} ok r={9} i={5} />
-      <Label x={10} y={194} anchor="start" size={13} weight={700} mono tone="bad" i={6}>localhost:5432</Label>
-      <Mark x={150} y={190} bad r={9} i={6} />
+      {nets.map(([s, label, port, open, req], k) => {
+        const c = nx(k) + 95
+        return (
+          <g key={s}>
+            <B x={nx(k)} y={40} w={190} h={36} t={open ? 'ok' : 'bad'} label={req} size={14} mono i={1 + k} />
+            {open
+              ? <Arrow d={`M${c} 78 V164`} kind="ok" i={1 + k} />
+              : <><Arrow d={`M${c} 78 V100`} kind="bad" i={1 + k} /><Mark x={c} y={110} bad r={9} i={1 + k} /><In i={1 + k}><Txt x={c + 14} y={115} size={12.5} w={700} fill="var(--bad)">Connection refused</Txt></In></>}
+            <Box x={nx(k) + 5} y={168} w={180} h={52} svc={s} label={label} i={0} />
+            <B x={nx(k) + 2} y={230} w={186} h={30} t={open ? 'ok' : 'gone'} label={open ? e('Port 8080 · veröffentlicht', 'port 8080 · published') : e(`Port ${port} · nur im Netz`, `port ${port} · network only`)} size={12.5} i={0} />
+          </g>
+        )
+      })}
+      <Go d="M378 194 H470" i={4} kind="ok" /><Label x={425} y={216} size={12} weight={700} mono tone="ok" i={4}>backend:80</Label>
+      <Go d="M658 194 H750" i={4} kind="ok" /><Label x={705} y={216} size={12} weight={700} mono tone="ok" i={4}>db:5432</Label>
+      <In i={4}><Txt x={572} y={292} size={12.5} fill="var(--ink-3)" anchor="middle">{e('Container rufen sich über den Service-Namen auf, nicht über localhost', 'containers call each other by service name, not localhost')}</Txt></In>
+      <Zone x={16} y={324} w={968} h={96} t="engine" label="Docker Engine (dockerd)" i={5} />
+      <B x={32} y={364} w={300} h={42} t="ok" label={e('Port-Regel: Host 8080 → frontend:8080', 'port rule: host 8080 → frontend:8080')} size={12.5} i={5} />
+      <B x={350} y={364} w={300} h={42} t="bad" label={e('Host 80, 5432: keine Regel → abgewiesen', 'host 80, 5432: no rule → refused')} size={12.5} i={5} />
+      <B x={668} y={364} w={300} h={42} t="libs" label={e('DNS: frontend · backend · db → Container-IP', 'DNS: frontend · backend · db → container IP')} size={12.5} i={5} />
+      <Wire d="M285 364 V262" i={5} k="ok" />
+      <B x={16} y={428} w={968} h={40} t="kernel" label={e('Linux-Kernel · setzt die Port-Regeln der Engine um', 'Linux kernel · carries out the engine’s port rules')} size={14} i={6} />
     </Svg>
-    <Take i={7} label={e('Merke', 'Remember')} text={e('Der Browser erreicht nur Host-Ports – hier `localhost:8080`. Container-Ports wie `backend:8080` und `db:5432` kennt nur Docker. `ports: "8080:80"` verbindet beide: Host-Port links, Container-Port rechts.', 'The browser only reaches host ports – here `localhost:8080`. Container ports like `backend:8080` and `db:5432` are known only to Docker. `ports: "8080:80"` connects both: host port left, container port right.')} />
+    <Take i={7} label={e('Merke', 'Remember')} text={e('Von außen kommt nur an, wofür die Docker Engine eine Port-Regel hat: `ports: "8080:8080"` gibt es nur beim frontend. backend und db erreichst du nur im Docker-Netz über ihren Service-Namen – `backend:80`, `db:5432` –, den das DNS der Engine in die Container-IP übersetzt.', 'From outside, only what the Docker Engine has a port rule for gets through: `ports: "8080:8080"` exists only for frontend. backend and db are reachable only inside the Docker network by their service name – `backend:80`, `db:5432` – which the engine’s DNS turns into the container IP.')} />
   </div>
 )
-
-
-/* ── ② 3 · Vue runs in the browser: its API calls go through the frontend's nginx to backend:8080 ── */
-export const ApiProxy = () => (
-  <div className="dg-col">
-    <Svg w={1000} h={404} label={e('Die Vue-App läuft im Browser. fetch(/api/meals) geht an localhost:8080, nginx im Container frontend leitet /api/ an backend:8080 weiter, das backend fragt db:5432. fetch an http://backend:8080 scheitert im Browser, weil nur das Docker-Netz den Namen backend kennt.', 'The Vue app runs in the browser. fetch(/api/meals) goes to localhost:8080, nginx in the frontend container forwards /api/ to backend:8080, the backend asks db:5432. fetch to http://backend:8080 fails in the browser because only the Docker network knows the name backend.')}>
-      <In i={0}>
-        <rect x={290} y={0} width={710} height={400} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
-        <Txt x={306} y={23} size={14} w={700} fill="var(--ink-2)">{e('Dein Rechner', 'Your machine')}</Txt>
-        <rect x={430} y={40} width={554} height={340} rx={14} fill="#f7faff" stroke="var(--blue)" strokeWidth={1.5} strokeDasharray="6 4" />
-        <Txt x={446} y={62} size={14} w={700} fill="var(--ink-2)">{e('Docker-Netz', 'Docker network')}</Txt>
-        <rect x={450} y={80} width={250} height={124} rx={12} fill="#fff" stroke="var(--svc-frontend)" strokeWidth={2.5} />
-        <Txt x={464} y={102} size={14} w={700} fill="var(--svc-frontend-d)">{e('Container frontend · nginx', 'Container frontend · nginx')}</Txt>
-      </In>
-      <B x={462} y={112} w={226} h={34} t="app" label={e('/ → Vue-App (HTML, JS)', '/ → Vue app (HTML, JS)')} size={12.5} i={0} />
-      <B x={462} y={156} w={226} h={34} t="libs" label="/api/ → backend:8080" size={12.5} mono i={0} />
-      <Box x={760} y={112} w={200} h={56} svc="api" label="backend:8080" size={14} i={0} />
-      <Box x={760} y={272} w={200} h={56} svc="db" label="db:5432" size={14} i={0} />
-      <B x={310} y={140} w={96} h={34} t="ok" label=":8080" size={14} mono i={0} />
-
-      <In i={1}>
-        <rect x={0} y={40} width={250} height={320} rx={12} fill="#fff" stroke="var(--ink-3)" strokeWidth={1.5} />
-        <path d="M0 68 H250" stroke="var(--line)" strokeWidth={1.5} />
-        <circle cx={16} cy={54} r={4} fill="#c3cddb" /><circle cx={30} cy={54} r={4} fill="#c3cddb" />
-        <text x={46} y={59} fontSize={12} fill="var(--ink-3)" style={mono}>localhost:8080</text>
-        <Txt x={16} y={100} size={15} w={700} fill="var(--ink)">{e('Vue-App', 'Vue app')}</Txt>
-        <Txt x={16} y={118} size={12.5} fill="var(--ink-3)">{e('vom frontend geladen, läuft hier', 'loaded from frontend, runs here')}</Txt>
-      </In>
-      <In i={2}>
-        <rect x={12} y={140} width={226} height={34} rx={8} fill="#e2f5ec" stroke="var(--ok)" strokeWidth={1.5} />
-        <text x={24} y={162} fontSize={12} fontWeight={700} fill="var(--ok)" style={mono}>fetch('/api/meals')</text>
-      </In>
-      <Mark x={220} y={157} ok r={9} i={2} />
-      <Num n={1} x={272} y={133} i={2} />
-      <Arrow d="M242 157 H302" kind="ok" i={2} />
-      <Arrow d="M410 157 H442" kind="ok" i={2} />
-      <Num n={2} x={730} y={192} i={3} />
-      <Arrow d="M692 173 L752 146" kind="ok" i={3} />
-      <Arrow d="M860 172 V264" kind="ok" i={3} />
-
-      <In i={4}>
-        <rect x={12} y={220} width={226} height={34} rx={8} fill="#fdecea" stroke="var(--bad)" strokeWidth={1.5} />
-        <text x={18} y={242} fontSize={11.5} fontWeight={700} fill="var(--bad)" style={mono}>fetch('http://backend:8080/…')</text>
-        <text x={16} y={280} fontSize={11.5} fontWeight={700} fill="var(--bad)" style={mono}>ERR_NAME_NOT_RESOLVED</text>
-        <Txt x={16} y={302} size={12} fill="var(--ink-3)">{e('backend kennt nur das Docker-Netz', 'only the Docker network knows backend')}</Txt>
-      </In>
-      <Mark x={270} y={237} bad r={9} i={4} />
-    </Svg>
-    <Take i={5} label={e('Merke', 'Remember')} text={e('Die Vue-App läuft im Browser, nicht im Container. Sie ruft `/api/…` beim frontend auf, nginx leitet an `backend:8080` weiter – den Namen backend kennt der Browser nicht.', 'The Vue app runs in the browser, not in the container. It calls `/api/…` on the frontend, nginx forwards to `backend:8080` – the browser does not know the name backend.')} />
-  </div>
-)
-
 
 /* ── ② 3 · started is not ready ── */
 const lane = (y: number, label: string, i: number, bars: ReactNode) => (
@@ -376,6 +270,7 @@ export const Order = () => (
 /* ── ② 5 · the one commands slide: what each command leaves behind ── */
 const cleanup: [string, string, ('ok' | 'bad')[], 'ok' | 'bad' | undefined][] = [
   ['up -d', e('baut fehlende Images, legt Netz, Volume und Container an', 'builds missing images, creates network, volume and containers'), ['ok', 'ok', 'ok'], 'ok'],
+  ['up -d --build', e('baut alle Images neu, z. B. nach Code-Änderungen, dann wie up -d', 'rebuilds all images, e.g. after code changes, then like up -d'), ['ok', 'ok', 'ok'], 'ok'],
   ['down', e('Container und Netz weg, Volume bleibt: nach up ist alles da', 'containers and network gone, volume stays: after up all is back'), ['bad', 'bad', 'ok'], undefined],
   ['down -v', e('löscht auch das Volume: alle gesammelten Daten sind weg', 'deletes the volume too: all collected data is gone'), ['bad', 'bad', 'bad'], 'bad'],
 ]
@@ -387,7 +282,7 @@ export const Commands = () => (
       { t: '    build:', chip: e('Dockerfile statt fertigem Image', 'Dockerfile instead of a ready image') },
       '      context: ./frontend',
       '      dockerfile: Dockerfile',
-      { t: '    ports: ["8080:80"]', chip: 'Port' },
+      { t: '    ports: ["8080:8080"]', chip: 'Port' },
       '  backend:',
       '    build:',
       '      context: ./backend',
@@ -410,10 +305,11 @@ export const Commands = () => (
     <div className="dg-col">
       <Code title="Terminal" i={1} lines={[
         { t: 'docker compose up -d', k: 'cmd' },
+        { t: 'docker compose up -d --build', k: 'cmd' },
         { t: 'docker compose down', k: 'cmd' },
         { t: 'docker compose down -v', k: 'cmd' },
       ]} />
-      <Svg w={500} h={306} label={e('Was nach jedem Befehl noch da ist: Container, Netz und Volume', 'What is still there after each command: containers, network and volume')}>
+      <Svg w={500} h={398} label={e('Was nach jedem Befehl noch da ist: Container, Netz und Volume', 'What is still there after each command: containers, network and volume')}>
         {['Container', e('Netz', 'Network'), 'Volume'].map((h, j) => <Label key={h} x={300 + j * 74} y={18} size={12.5} weight={700}>{h}</Label>)}
         {cleanup.map(([c, l, marks, tone], k) => (
           <In key={c} i={2 + k}>

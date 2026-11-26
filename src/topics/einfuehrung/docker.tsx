@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react'
+import { t } from '../../i18n.ts'
 import { Svg, Take, Box as B, Zone, Ctr, Arrow, Label, Wire, Tick } from '../../components/Svg.tsx'
-import { Icon, type IconName } from '../../components/Icons.tsx'
+import { Icon } from '../../components/Icons.tsx'
 import { Code } from '../../components/Code.tsx'
 import { e } from '../../components/quizModel.ts'
 import { Tag, Mark, In, Txt, Go } from '../../components/harbor/harbor.tsx'
@@ -111,7 +113,7 @@ export const Recipe = () => (
 
 /* ── ① 3 · build, then run: Dockerfile → image → containers, next to the Java steps students know ── */
 // Same lines as on the commands slide: the image builds the jar itself, so no JDK is needed on the machine.
-const dockerfile = ['FROM maven:3.9-eclipse-temurin-21', 'WORKDIR /app', 'COPY . .', 'RUN mvn -q package -DskipTests', 'RUN cp target/*.jar app.jar', 'EXPOSE 8080', 'CMD ["java", "-jar", "app.jar"]']
+const dockerfile = ['FROM maven:3.9-eclipse-temurin-21', 'WORKDIR /app', 'COPY . .', 'RUN mvn -q package -DskipTests', 'RUN cp target/*.jar app.jar', 'EXPOSE 80', 'CMD ["java", "-jar", "app.jar"]']
 const running = ['backend', 'backend-test']
 export const BuildRun = () => (
   <div className="dg-col">
@@ -150,38 +152,61 @@ export const BuildRun = () => (
   </div>
 )
 
-/* ── ② 1 · what a container is: the same process, only with its own view of files, network and processes ── */
-const views: [IconName, string, string, string][] = [
-  ['folder', e('Dateien', 'files'), e('alle Dateien des Rechners', 'all files of the machine'), e('nur das Image: /app, JDK 21', 'only the image: /app, JDK 21')],
-  ['network', e('Netz', 'Network'), e('localhost = der Rechner', 'localhost = the machine'), e('eigene IP · localhost = der Container', 'own IP · localhost = the container')],
-  ['bolt', e('Prozesse', 'processes'), e('sieht alle Prozesse', 'sees all processes'), e('sieht nur sich selbst', 'sees only itself')],
-]
+/* ── ② 1 · what a container is: four separate walls around one process, each its own kernel mechanism ── */
+const px = (k: number) => 30 + k * 240
+const panel = (k: number, title: string, sub: string, how: string, body: ReactNode) => (
+  <g key={k}>
+    <In i={1 + k}>
+      <rect x={px(k)} y={66} width={220} height={258} rx={12} fill="#fff" stroke="var(--line)" strokeWidth={1.5} />
+      <Txt x={px(k) + 14} y={92} size={15} w={700} fill="var(--ink)">{title}</Txt>
+      <Txt x={px(k) + 14} y={112} size={12.5} fill="var(--ink-3)">{sub}</Txt>
+      {body}
+    </In>
+    <B x={px(k) + 10} y={280} w={200} h={34} t="kchip" label={how} size={13} i={1 + k} />
+    <Wire d={`M${px(k) + 110} 314 V350`} i={5} />
+  </g>
+)
+const code = (x: number, y: number, s: string, fill = 'var(--ink)') => <text x={x} y={y} fontSize={13} fill={fill} style={mono}>{s}</text>
 export const Inside = () => (
   <div className="dg-col">
-    <Svg w={1000} h={404} label={e('Derselbe Prozess java -jar app.jar links ohne, rechts im Container. Im Container sieht er nur die Dateien des Images, hat ein eigenes Netz mit eigenem localhost und sieht nur sich selbst. Den Linux-Kernel teilen sich alle.', 'The same process java -jar app.jar left without, right inside a container. In the container it sees only the image’s files, has its own network with its own localhost and sees only itself. All of them share the Linux kernel.')}>
+    <Svg w={1000} h={448} label={e('Ein Container ist ein Prozess mit vier getrennten Wänden. Dateien: ein eigenes Verzeichnis aus dem Image, per Mount-Namespace. Name und Netz: eigener Hostname und eigene Netzkarte im Docker-Netz, per UTS- und Network-Namespace. Prozesse: im Container PID 1, auf dem Host PID 4711, per PID-Namespace. Ressourcen: höchstens ein CPU-Kern und 512 MB, per cgroups. Die Docker Engine legt alle vier um den Prozess, der Linux-Kernel setzt sie um.', 'A container is a process with four separate walls. Files: a directory of its own from the image, via the mount namespace. Name and network: its own host name and network card in the Docker network, via UTS and network namespaces. Processes: PID 1 inside the container, PID 4711 on the host, via the PID namespace. Resources: at most one CPU core and 512 MB, via cgroups. The Docker Engine puts all four around the process, the Linux kernel enforces them.')}>
       <In i={0}>
-        <rect x={0} y={0} width={1000} height={400} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
+        <rect x={0} y={0} width={1000} height={446} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
         <Txt x={16} y={23} size={14} w={700} fill="var(--ink-2)">{e('Dein Rechner', 'Your machine')}</Txt>
-        <Txt x={984} y={23} size={13} fill="var(--ink-3)" anchor="end">Linux</Txt>
-        <Txt x={24} y={56} size={14} w={700} fill="var(--ink)">{e('ohne Container', 'without a container')}</Txt>
       </In>
-      <B x={24} y={70} w={380} h={46} t="app" label="java -jar app.jar" size={15} mono i={0} />
-      <Ctr x={584} y={34} w={404} h={292} name={e('im Container backend', 'in the container backend')} i={1} />
-      <B x={596} y={70} w={380} h={46} t="app" label="java -jar app.jar" size={15} mono i={1} />
-      {views.map(([icon, what, host, own], k) => {
-        const y = 146 + k * 60
-        return (
-          <g key={icon}>
-            <In i={2 + k}><Icon name={icon} x={436} y={y + 6} s={34} /><Txt x={478} y={y + 29} size={14} w={700} fill="var(--ink)">{what}</Txt></In>
-            <B x={24} y={y} w={380} h={46} t="reg" label={host} size={14} i={2 + k} />
-            <B x={596} y={y} w={380} h={46} t="libs" label={own} size={14} i={2 + k} />
+      <Ctr x={16} y={32} w={968} h={304} name={e('Container backend = ein Prozess (java -jar app.jar) mit vier getrennten Wänden', 'Container backend = one process (java -jar app.jar) with four separate walls')} i={0} />
+      {panel(0, e('Dateisystem', 'File system'), e('kommt aus dem Image', 'comes from the image'), 'Mount-Namespace', <>
+        {code(px(0) + 16, 144, '/')}{code(px(0) + 16, 166, '├ app/app.jar')}{code(px(0) + 16, 188, '├ opt/java   JDK 21')}{code(px(0) + 16, 210, '├ etc/')}{code(px(0) + 16, 232, '└ bin/')}
+        <Txt x={px(0) + 16} y={262} size={12} fill="var(--ink-3)">{e('Host-Dateien sieht er nicht', 'host files stay invisible')}</Txt>
+      </>)}
+      {panel(1, e('Name und Netz', 'Name and network'), e('eigene Identität im Docker-Netz', 'own identity in the Docker network'), 'UTS- + Network-NS', <>
+        {code(px(1) + 16, 144, 'hostname: backend')}{code(px(1) + 16, 172, 'eth0: 172.18.0.3')}{code(px(1) + 16, 200, t(e('localhost = er selbst', 'localhost = itself')))}
+        <rect x={px(1) + 16} y={218} width={188} height={30} rx={8} fill="#f7faff" stroke="var(--blue)" strokeDasharray="5 4" strokeWidth={1.5} />
+        <Txt x={px(1) + 110} y={238} size={12.5} w={700} fill="var(--blue-deep)" anchor="middle">{e('steckt im Docker-Netz', 'plugged into the Docker network')}</Txt>
+      </>)}
+      {panel(2, e('Prozessliste', 'Process list'), e('sieht nur sich selbst', 'sees only itself'), 'PID-Namespace', <>
+        <Txt x={px(2) + 16} y={144} size={12} w={700} fill="var(--ink-3)">{e('im Container', 'in the container')}</Txt>
+        <Txt x={px(2) + 124} y={144} size={12} w={700} fill="var(--ink-3)">{e('auf dem Host', 'on the host')}</Txt>
+        <rect x={px(2) + 10} y={154} width={200} height={30} rx={6} fill="#e2f5ec" />
+        {code(px(2) + 16, 174, 'PID 1 java', 'var(--ok)')}{code(px(2) + 124, 174, 'PID 4711')}
+        {code(px(2) + 16, 206, '–', 'var(--ink-3)')}{code(px(2) + 124, 206, 'PID 1 init', 'var(--ink-3)')}
+        {code(px(2) + 16, 230, '–', 'var(--ink-3)')}{code(px(2) + 124, 230, 'PID 812 …', 'var(--ink-3)')}
+        <Txt x={px(2) + 16} y={262} size={12} fill="var(--ink-3)">{e('derselbe Prozess, zwei Nummern', 'same process, two numbers')}</Txt>
+      </>)}
+      {panel(3, e('Ressourcen', 'Resources'), e('Grenzen, keine eigene Sicht', 'limits, not a view'), 'cgroups', <>
+        {([[e('CPU ≤ 1 Kern', 'CPU ≤ 1 core'), 0.25], [e('RAM ≤ 512 MB', 'RAM ≤ 512 MB'), 0.4]] as const).map(([l, f], j) => (
+          <g key={j}>
+            <Txt x={px(3) + 16} y={148 + j * 52} size={13} w={700} fill="var(--ink)">{l}</Txt>
+            <rect x={px(3) + 16} y={158 + j * 52} width={188} height={12} rx={6} fill="#e3e8f0" />
+            <rect x={px(3) + 16} y={158 + j * 52} width={188 * f} height={12} rx={6} fill="var(--blue)" />
           </g>
-        )
-      })}
-      <Wire d="M214 312 V342" i={5} /><Wire d="M786 326 V342" i={5} />
-      <B x={24} y={342} w={952} h={48} t="kernel" label={e('Linux-Kernel · teilen sich alle Prozesse und Container', 'Linux kernel · shared by all processes and containers')} sub={e('auf macOS und Windows: der Kernel der Linux-VM von Docker Desktop', 'on macOS and Windows: the kernel of Docker Desktop’s Linux VM')} size={15} i={5} />
+        ))}
+        <Txt x={px(3) + 16} y={262} size={12} fill="var(--ink-3)">{e('mehr gibt der Kernel nicht her', 'the kernel gives no more')}</Txt>
+      </>)}
+      <B x={16} y={350} w={968} h={40} t="engine" label={e('Docker Engine (dockerd) · bündelt die vier Wände unter einem Namen', 'Docker Engine (dockerd) · bundles the four walls under one name')} size={14} i={5} />
+      <B x={16} y={398} w={968} h={40} t="kernel" label={e('Linux-Kernel · setzt jede Wand einzeln um, für alle Container derselbe', 'Linux kernel · enforces each wall separately, the same for all containers')} size={14} i={5} />
     </Svg>
-    <Take i={6} label={e('Merke', 'Remember')} text={e('Ein Container ist ein normaler Prozess mit eigener Sicht: eigene Dateien aus dem Image, eigenes Netz mit eigenem localhost, eigene Prozessliste. Den Kernel teilt er mit dem Rechner.', 'A container is a normal process with its own view: its own files from the image, its own network with its own localhost, its own process list. It shares the kernel with the machine.')} />
+    <Take i={6} label={e('Merke', 'Remember')} text={e('„Container“ ist kein eigenes Ding im Kernel, sondern ein Bündel getrennter Wände um einen normalen Prozess: Dateisystem (Mount-Namespace), Name und Netz (UTS- und Network-Namespace), Prozessliste (PID-Namespace) und Ressourcen (cgroups). Weil die Docker Engine alle vier zusammen anlegt, hält der Prozess sich für ein eigenes System.', '“Container” is not a thing of its own in the kernel but a bundle of separate walls around a normal process: file system (mount namespace), name and network (UTS and network namespaces), process list (PID namespace) and resources (cgroups). Because the Docker Engine sets up all four together, the process believes it is a system of its own.')} />
   </div>
 )
 
@@ -213,7 +238,7 @@ export const JarVsContainer = () => (
       <B x={cx(0)} y={104} w={166} h={50} t="app" label="app.jar" sub={e('ein Prozess', 'one process')} size={15} />
       <B x={cx(0)} y={168} w={166} h={38} t="libs" label={e('JDK 17 · installiert', 'JDK 17 · installed')} size={13} />
       {boxed(cx(1), 2)}
-      <B x={cx(1)} y={168} w={166} h={38} t="gone" label={e('nichts: dockerd startet', 'nothing: dockerd starts')} size={12} i={2} />
+      <B x={cx(1)} y={168} w={166} h={38} t="engine" label={e('Docker Engine · dockerd', 'Docker Engine · dockerd')} size={12.5} i={2} />
       {boxed(cx(2), 4)}
       <B x={cx(2)} y={168} w={166} h={38} t="gone" label={e('nichts, kein Daemon', 'nothing, no daemon')} size={12} i={4} />
       <Zone x={cx(3)} y={44} w={166} h={116} t="guest" label="VM" i={6} />
@@ -234,7 +259,7 @@ export const JarVsContainer = () => (
         )
       })}
     </Svg>
-    <Take i={13} label={e('Merke', 'Remember')} text={e('Docker und Podman starten dieselben Images als Prozess direkt auf dem Kernel, Podman nur ohne Hintergrunddienst. Eine VM bootet ein eigenes Betriebssystem: stärker getrennt, aber schwerer.', 'Docker and Podman start the same images as a process directly on the kernel, Podman just without a background service. A VM boots an operating system of its own: more strongly separated, but heavier.')} />
+    <Take i={13} label={e('Merke', 'Remember')} text={e('Docker und Podman starten dieselben Images als Prozess auf dem Kernel des Rechners. Bei Docker sitzt die Docker Engine (dockerd) dazwischen, Podman kommt ohne Hintergrunddienst aus. Eine VM bootet ein eigenes Betriebssystem: stärker getrennt, aber schwerer.', 'Docker and Podman start the same images as a process on the machine’s kernel. With Docker the Docker Engine (dockerd) sits in between, Podman does without a background service. A VM boots an operating system of its own: more strongly separated, but heavier.')} />
   </div>
 )
 
@@ -289,55 +314,6 @@ export const Registry = () => (
   </div>
 )
 
-/* ── ③ 2 · what gets added at start: the image stays fixed, port, settings and data come with docker run ── */
-export const RunOptions = () => (
-  <div className="dg-col">
-    <Svg w={1000} h={384} label={e('docker run startet das Image postgres:18 als Container db. Beim Start kommen dazu: mit -p ein Host-Port, mit -e eine Umgebungsvariable, mit -v ein Volume außerhalb des Containers.', 'docker run starts the image postgres:18 as the container db. At start it gets: a host port with -p, an environment variable with -e, a volume outside the container with -v.')}>
-      <In i={0}>
-        <rect x={0} y={0} width={1000} height={44} rx={10} fill="#0f1b2d" />
-        <text x={16} y={27} fontSize={12.5} style={mono}>
-          <tspan fill="#cbd5e1">$ docker run -d --name db </tspan><tspan fill="#4ade80" fontWeight={700}>-p 5432:5432</tspan><tspan fill="#cbd5e1"> </tspan><tspan fill="#fbbf24" fontWeight={700}>-e POSTGRES_PASSWORD=geheim</tspan><tspan fill="#cbd5e1"> </tspan><tspan fill="#c4b5fd" fontWeight={700}>-v dbdata:/var/lib/postgresql</tspan><tspan fill="#fff"> postgres:18</tspan>
-        </text>
-        <rect x={0} y={64} width={1000} height={316} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
-        <Txt x={16} y={87} size={14} w={700} fill="var(--ink-2)">{e('Dein Rechner', 'Your machine')}</Txt>
-      </In>
-      <Ctr x={30} y={166} w={220} h={120} name="Image postgres:18" i={1} />
-      <B x={44} y={198} w={192} h={32} t="app" label="Postgres 18" size={14} i={1} />
-      <B x={44} y={238} w={192} h={32} t="libs" label="Linux-Basis" size={14} i={1} />
-      <In i={1}><Txt x={140} y={312} size={12.5} fill="var(--ink-3)" anchor="middle">{e('fest, für alle gleich', 'fixed, the same for all')}</Txt></In>
-      <Arrow d="M258 236 H382" i={2} />
-      <Label x={320} y={224} size={12} weight={700} mono i={2}>docker run</Label>
-      <In i={2}>
-        <rect x={390} y={166} width={260} height={140} rx={12} fill="#fff" stroke="var(--svc-db)" strokeWidth={2.5} />
-        <Txt x={404} y={188} size={14} w={700} fill="var(--svc-db-d)">Container db</Txt>
-      </In>
-      <B x={404} y={202} w={232} h={36} t="app" label={e('Prozess: postgres', 'process: postgres')} size={13.5} i={2} />
-      <B x={404} y={252} w={232} h={36} t="gone" label="/var/lib/postgresql" size={12.5} mono i={2} />
-
-      <B x={440} y={96} w={160} h={32} t="ok" label={e(':5432 · Host-Port', ':5432 · host port')} size={13} i={3} />
-      <Arrow d="M520 132 V157" kind="ok" i={3} />
-      <Label x={610} y={117} anchor="start" size={12.5} weight={700} mono tone="ok" i={3}>-p 5432:5432</Label>
-
-      <In i={4}>
-        <rect x={700} y={166} width={280} height={64} rx={10} fill="#fff3d6" stroke="#e6c27a" strokeWidth={1.5} />
-        <Txt x={714} y={186} size={12.5} w={700} fill="#8a6a20">{e('-e · Umgebungsvariable', '-e · environment variable')}</Txt>
-        <text x={714} y={214} fontSize={13} fill="var(--ink)" style={mono}>POSTGRES_PASSWORD=geheim</text>
-      </In>
-      <Arrow d="M696 198 H658" i={4} />
-
-      <In i={5}>
-        <path d="M760 256 V316 A80 10 0 0 0 920 316 V256" fill="#efeaff" stroke="var(--svc-db)" strokeWidth={2} />
-        <ellipse cx={840} cy={256} rx={80} ry={10} fill="#f6f3ff" stroke="var(--svc-db)" strokeWidth={2} />
-        <Txt x={840} y={294} size={13.5} w={700} fill="var(--svc-db-d)" anchor="middle">Volume dbdata</Txt>
-        <text x={840} y={350} fontSize={12} fontWeight={700} fill="var(--svc-db-d)" textAnchor="middle" style={mono}>-v dbdata:/var/lib/postgresql</text>
-      </In>
-      <Arrow d="M642 272 L752 286" kind="mute" both i={5} />
-    </Svg>
-    <Take i={6} label={e('Merke', 'Remember')} text={e('Das Image bleibt fest und für alle gleich. Was je Rechner anders ist, hängst du beim Start an: Ports mit `-p`, Einstellungen mit `-e`, Daten mit `-v`.', 'The image stays fixed and the same for all. What differs per machine you attach at start: ports with `-p`, settings with `-e`, data with `-v`.')} />
-  </div>
-)
-
-
 /* ── ② 3 · the one commands slide ── */
 export const Commands = () => (
   <div className="dg-col">
@@ -348,13 +324,13 @@ export const Commands = () => (
         { t: 'COPY . .', chip: e('dein Quellcode hinein', 'your source code inside') },
         { t: 'RUN mvn -q package -DskipTests', chip: e('im Image bauen', 'build in the image') },
         { t: 'RUN cp target/*.jar app.jar', chip: e('Jar umbenennen', 'rename the jar') },
-        { t: 'EXPOSE 8080', chip: e('Port der App', 'port of the app') },
+        { t: 'EXPOSE 80', chip: e('Port der App', 'port of the app') },
         { t: 'CMD ["java", "-jar", "app.jar"]', chip: e('so startet sie', 'how it starts') },
       ]} />
       <Code title="Terminal" i={1} lines={[
         { t: 'docker pull postgres:18', k: 'cmd', chip: e('Image herunterladen', 'download image') },
         { t: 'docker build -t mensa-backend:1.0 .', k: 'cmd', chip: e('Image bauen', 'build image') },
-        { t: 'docker run -d -p 8080:8080 --name backend mensa-backend:1.0', k: 'cmd', chip: e('starten', 'start') },
+        { t: 'docker run -d -p 80:80 --name backend mensa-backend:1.0', k: 'cmd', chip: e('starten', 'start') },
         { t: 'docker ps', k: 'cmd', chip: e('laufende Container anzeigen', 'show running containers') },
         { t: 'docker logs backend', k: 'cmd', chip: e('Ausgaben lesen', 'read the output') },
         { t: 'docker stop backend', k: 'cmd', chip: e('anhalten', 'stop') },
@@ -362,7 +338,7 @@ export const Commands = () => (
       ]} />
     </div>
     <Svg w={1000} h={120} label={e('Was die Teile von docker run bedeuten', 'What the parts of docker run mean')}>
-      {([['-d', e('im Hintergrund', 'in the background')], ['-p 8080:8080', e('Host-Port → Container-Port', 'host port → container port')], ['--name backend', e('Name des Containers', 'name of the container')], ['mensa-backend:1.0', e('welches Image', 'which image')]] as const).map(([c, l], k) => (
+      {([['-d', e('im Hintergrund', 'in the background')], ['-p 80:80', e('Host-Port → Container-Port', 'host port → container port')], ['--name backend', e('Name des Containers', 'name of the container')], ['mensa-backend:1.0', e('welches Image', 'which image')]] as const).map(([c, l], k) => (
         <In key={c} i={2 + k}>
           <rect x={k * 250} y={10} width={236} height={86} rx={14} fill="#fff" stroke="var(--line)" strokeWidth={1.5} />
           <text x={k * 250 + 118} y={44} textAnchor="middle" fontSize={16} style={{ fontFamily: "var(--mono)" }} fontWeight={700} fill="var(--blue-deep)">{c}</text>

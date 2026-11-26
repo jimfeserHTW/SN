@@ -37,8 +37,8 @@ const quiz: Record<string, Task[]> = {
     ], 1, e('Ein Container fährt nicht hoch wie ein Server. Er ist ein Prozess auf dem Rechner, abgeschottet und mit eigener Java-Laufzeit.', 'A container does not boot like a server. It is a process on the machine, sealed off and with its own Java runtime.')),
     order(e('Bringe die Befehle in die Reihenfolge, in der du sie brauchst.', 'Put the commands in the order you need them.'), ['docker build -t mensa-backend:1.0 .', 'docker run -d --name backend mensa-backend:1.0', 'docker stop backend', 'docker rm backend'],
       e('Erst das Image bauen, dann den Container starten, anhalten und zum Schluss entfernen.', 'First build the image, then start the container, stop it and finally remove it.'), { code: true }),
-    gaps(e('Ergänze den Befehl: im Hintergrund, Rechner-Port 8080 auf Container-Port 8080.', 'Complete the command: in the background, machine port 8080 to container port 8080.'), 'docker [[run]] -[[d]] -[[p]] 8080:8080 --name backend mensa-backend:1.0\n',
-      e('-d schickt den Container in den Hintergrund, -p leitet Port 8080 des Rechners an Port 8080 im Container weiter.', '-d sends the container to the background, -p forwards port 8080 of the machine to port 8080 in the container.'), 'terminal'),
+    gaps(e('Ergänze den Befehl: im Hintergrund, Rechner-Port 80 auf Container-Port 80.', 'Complete the command: in the background, machine port 80 to container port 80.'), 'docker [[run]] -[[d]] -[[p]] 80:80 --name backend mensa-backend:1.0\n',
+      e('-d schickt den Container in den Hintergrund, -p leitet Port 80 des Rechners an Port 80 im Container weiter.', '-d sends the container to the background, -p forwards port 80 of the machine to port 80 in the container.'), 'terminal'),
     match(e('Was hängst du beim Start mit welchem Schalter an?', 'What do you attach at start with which flag?'), [
       ['-p 5432:5432', e('einen Host-Port, den der Rechner kennt', 'a host port the machine knows')],
       ['-e POSTGRES_PASSWORD=geheim', e('eine Einstellung als Umgebungsvariable', 'a setting as an environment variable')],

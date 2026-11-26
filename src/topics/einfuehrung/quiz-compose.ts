@@ -24,8 +24,8 @@ const quiz: Record<string, Task[]> = {
     order(e('Bringe die Befehle in eine sinnvolle Reihenfolge: starten, aufräumen, alles samt Daten löschen.', 'Put the commands in a sensible order: start, clean up, delete everything including data.'), ['docker compose up -d', 'docker compose down', 'docker compose down -v'],
       e('up startet alles laut compose.yaml, down entfernt Container und Netz, down -v zusätzlich die Volumes.', 'up starts everything as compose.yaml says, down removes containers and network, down -v the volumes as well.'), { code: true }),
     choice(e('Die Vue-App im Browser will die Gerichte laden. Welcher Aufruf funktioniert mit Compose?', 'The Vue app in the browser wants to load the meals. Which call works with Compose?'), [
-      "fetch('http://backend:8080/api/meals')", "fetch('/api/meals')", "fetch('http://db:5432/meals')",
-    ], 1, e('Die Vue-App läuft im Browser. Den Namen backend kennt nur das Docker-Netz; /api/ geht an das frontend, und nginx leitet an backend:8080 weiter.', 'The Vue app runs in the browser. Only the Docker network knows the name backend; /api/ goes to the frontend, and nginx forwards to backend:8080.')),
+      "fetch('http://backend:80/api/meals')", "fetch('/api/meals')", "fetch('http://db:5432/meals')",
+    ], 1, e('Die Vue-App läuft im Browser. Den Namen backend kennt nur das Docker-Netz; /api/ geht an das frontend, und nginx leitet an backend:80 weiter.', 'The Vue app runs in the browser. Only the Docker network knows the name backend; /api/ goes to the frontend, and nginx forwards to backend:80.')),
   ],
 }
 export default quiz

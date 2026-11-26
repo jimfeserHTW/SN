@@ -19,12 +19,6 @@ const Say = ({ x, y, size, children, w = 700, fill = 'var(--ink)', anchor = 'sta
 const Fade = ({ on, delay = 0, children }: { on: boolean; delay?: number; children: ReactNode }) => (
   <g className="tr" style={{ opacity: on ? 1 : 0, transitionDelay: on ? `${delay}ms` : '0ms' }} aria-hidden={!on || undefined}>{children}</g>
 )
-const wrap = (text: string, max: number) => text.split(' ').reduce<string[]>((lines, w) => {
-  const last = lines[lines.length - 1]
-  if (last !== undefined && (last + ' ' + w).length <= max) lines[lines.length - 1] = last + ' ' + w
-  else lines.push(w)
-  return lines
-}, [])
 
 /* ── generic line icons (no logos) ── */
 type Glyph = 'shop' | 'play' | 'bank' | 'cap'
@@ -309,20 +303,10 @@ export const Evolution = ({ step }: { step: number }) => (
   </Svg>
 )
 
-/* ── Ask yourself: a command on the left, the question it raises on the right ── */
-export const Ask = ({ cmd, lines }: { cmd: string; lines: string[] }) => (
-  <Svg w={1000} h={190} label={`${cmd}. ${lines.map(l => t(l)).join(' ')}`}>
-    <rect x={0} y={20} width={470} height={110} rx={14} fill="#0f1b2d" />
-    <text x={24} y={84} fontSize={20} fill="#e2e8f0" style={mono}><tspan fill="#94a3b8">$ </tspan>{cmd}</text>
-    <Say x={520} y={34} size={13} fill="var(--blue)" caps>{e('Stell dir die Frage', 'Ask yourself')}</Say>
-    {lines.map((l, k) => <Say key={k} x={520} y={76 + k * 36} size={26}>{l}</Say>)}
-  </Svg>
-)
-
 /* ── Three commands by hand: the same containers start, fail, and finally run with one Compose command ── */
 const lines: [string, string][] = [
   ['docker run -d --name backend -e DB_HOST=db mensa-backend', e('kein --network und vor der db gestartet', 'no --network, and started before db')],
-  ['docker run -d --name frontend mensa-frontend', e('kein -p 8080:80', 'no -p 8080:80')],
+  ['docker run -d --name frontend mensa-frontend', e('kein -p 8080:8080', 'no -p 8080:8080')],
   ['docker run -d --name db -e POSTGRES_PASSWORD=geheim postgres:18', e('kein -v: Daten nicht dauerhaft', 'no -v: data not lasting')],
 ]
 const fold = { transformOrigin: '500px 100px', transformBox: 'view-box' } as const
@@ -380,54 +364,13 @@ export const Manual = ({ step }: { step: number }) => {
   )
 }
 
-/* ── Quiz: the question on a dark card, the options as a list; the answer lights up on the next step ── */
-type Way = 'jar' | 'ctr' | 'vm'
-export type Option = { label: string; icon?: Way; code?: boolean }
-const wayIcon = (w: Way, cx: number, cy: number, s = 1) => {
-  const k = (d: number) => d * s
-  if (w === 'jar') return <g><rect x={cx - k(46)} y={cy - k(32)} width={k(92)} height={k(64)} rx={k(10)} fill="#0f1b2d" /><text x={cx - k(30)} y={cy + k(9)} fontSize={k(26)} fontWeight={700} fill="#4ade80" style={mono}>&gt;_</text></g>
-  if (w === 'ctr') return <g><rect x={cx - k(54)} y={cy - k(32)} width={k(108)} height={k(64)} rx={k(6)} fill="#1d63ed" />{[1, 2, 3, 4, 5, 6, 7].map(r => <path key={r} d={`M${cx - k(54) + k(r * 13.5)} ${cy - k(26)} V${cy + k(26)}`} stroke="rgba(255,255,255,.3)" strokeWidth={k(2.5)} />)}</g>
-  return <g><rect x={cx - k(50)} y={cy - k(34)} width={k(100)} height={k(62)} rx={k(8)} fill="none" stroke="var(--ink)" strokeWidth={k(4)} /><rect x={cx - k(32)} y={cy - k(20)} width={k(64)} height={k(34)} rx={k(4)} fill="#c4b5fd" /></g>
-}
-export const ways: Option[] = [{ label: 'java -jar', icon: 'jar' }, { label: 'Container', icon: 'ctr' }, { label: e('Virtuelle Maschine', 'Virtual machine'), icon: 'vm' }]
 /** A check button under an interactive scene. */
 const Check = ({ done, onCheck, onReset }: { done: boolean; onCheck: () => void; onReset: () => void }) => (
   <button type="button" className="quiz-check" onClick={done ? onReset : onCheck}>{t(done ? e('Nochmal', 'Try again') : e('Prüfen', 'Check'))}</button>
 )
-export const Quiz = ({ n, of, question, options, pick, why }: { n: number; of: number; question: string; options: Option[]; pick: number; why: string }) => {
-  const [sel, setSel] = useState<number>()
-  const [done, setDone] = useState(false)
-  const right = done && sel === pick
-  return (
-    <div className="dg-col">
-      <Svg w={1000} h={290} label={t(question)}>
-        <rect x={0} y={0} width={380} height={238} rx={18} fill="var(--ink)" />
-        <Say x={28} y={40} size={13} fill="#9fb0c8" caps>{`${t(e('Frage', 'Question'))} ${n}/${of}`}</Say>
-        {wrap(t(question), 24).map((l, k) => <Say key={k} x={28} y={86 + k * 34} size={24} fill="#fff">{l}</Say>)}
-        {options.map(({ label, icon, code }, k) => {
-          const y = k * 84, chosen = sel === k, ok = done && k === pick, bad = done && chosen && k !== pick
-          return (
-            <g key={k} style={{ cursor: done ? 'default' : 'pointer' }} onClick={() => !done && setSel(k)}>
-              <rect className="tr-fill" x={420} y={y} width={580} height={70} rx={14} strokeWidth={chosen || ok ? 2.5 : 1.5}
-                style={{ fill: ok ? '#e2f5ec' : bad ? '#fdecea' : chosen ? '#eef4ff' : '#fff', stroke: ok ? 'var(--ok)' : bad ? 'var(--bad)' : chosen ? 'var(--blue)' : '#d8dfea' }} />
-              <circle className="tr-fill" cx={452} cy={y + 35} r={11} strokeWidth={2} style={{ fill: chosen ? (bad ? 'var(--bad)' : ok ? 'var(--ok)' : 'var(--blue)') : '#fff', stroke: chosen ? 'transparent' : 'var(--ink-3)' }} />
-              {icon && wayIcon(icon, 510, y + 35, 0.45)}
-              <Say x={icon ? 560 : 480} y={y + 43} size={code ? 21 : 20} code={code}>{label}</Say>
-            </g>
-          )
-        })}
-        {done
-          ? <g className="tr-in">{wrap(`${t(right ? e('Richtig.', 'Correct.') : e('Nicht ganz.', 'Not quite.'))} ${t(why)}`, 66).map((l, k) => <Say key={k} x={420} y={268 + k * 22} size={16} w={500} fill={right ? 'var(--ok)' : 'var(--bad)'}>{l}</Say>)}</g>
-          : <Say x={420} y={268} size={16} w={500} fill="var(--ink-3)">{e('Wähle eine Antwort und prüfe sie.', 'Pick an answer and check it.')}</Say>}
-      </Svg>
-      <Check done={done} onCheck={() => sel !== undefined && setDone(true)} onReset={() => { setSel(undefined); setDone(false) }} />
-    </div>
-  )
-}
-
 /* ── compose.yaml, one key at a time: the highlight moves, the file stays ── */
 const yaml: [string, number][] = [
-  ['services:', 0], ['  frontend:', 0], ['    build: ./frontend', 0], ['    ports: ["8080:80"]', 1],
+  ['services:', 0], ['  frontend:', 0], ['    build: ./frontend', 0], ['    ports: ["8080:8080"]', 1],
   ['  backend:', 0], ['    build: ./backend', 0], ['    environment:', 2], ['      DB_HOST: db', 2], ['    depends_on: [db]', 3],
   ['  db:', 0], ['    image: postgres:18', 0], ['    expose: ["5432"]', 1], ['    environment:', 2], ['      POSTGRES_PASSWORD: geheim', 2], ['    volumes: [dbdata:/var/lib/postgresql]', 4],
   ['volumes: { dbdata: }', 4],
@@ -440,7 +383,7 @@ const runs = yaml.reduce<{ sec: number; from: number; len: number }[]>((acc, [, 
 }, [])
 const keys: [string, string, [string, string]][] = [
   ['services', e('die Container', 'the containers'), [e('Ein Eintrag pro Container: mit build:', 'One entry per container: built yourself'), e('selbst gebaut, mit image: geladen.', 'with build:, downloaded with image:.')]],
-  ['ports', e('Ports, außen und innen', 'ports, outside and inside'), [e('ports 8080:80: Host-Port → Container-Port.', 'ports 8080:80: host port → container port.'), e('expose 5432: Port nur im Docker-Netz.', 'expose 5432: port only in the Docker network.')]],
+  ['ports', e('Ports, außen und innen', 'ports, outside and inside'), [e('ports 8080:8080: Host-Port → Container-Port.', 'ports 8080:8080: host port → container port.'), e('expose 5432: Port nur im Docker-Netz.', 'expose 5432: port only in the Docker network.')]],
   ['environment', e('Einstellungen', 'Settings'), [e('Einstellungen als Umgebungsvariablen,', 'Settings as environment variables,'), e('zum Beispiel DB_HOST = db.', 'for example DB_HOST = db.')]],
   ['depends_on', e('Reihenfolge', 'order'), [e('Startreihenfolge: erst db,', 'Start order: first db,'), e('dann backend.', 'then backend.')]],
   ['volumes', e('Daten, die bleiben', 'data that stays'), [e('Daten liegen außerhalb des Containers', 'Data lives outside the container'), e('und überleben down und up.', 'and survives down and up.')]],
@@ -464,52 +407,6 @@ export const Anatomy = ({ focus }: { focus: number }) => (
       <Say x={480} y={314} size={20} w={500} fill="var(--ink-2)">{keys[focus][2][1]}</Say>
     </g>
   </Svg>
-)
-
-/* ── What a container really is: one process, walled in by the kernel ── */
-const why: [string, string][] = [
-  [e('Für den Kernel sind beide nur Prozesse.', 'To the kernel both are just processes.'), e('Kein eigenes Betriebssystem, kein eigener Kernel im Container.', 'No operating system and no kernel of its own in the container.')],
-  [e('Namespaces: Der Kernel gibt ihm eine eigene Sicht.', 'Namespaces: the kernel gives it a view of its own.'), e('Eigene Dateien, eigenes Netz mit eigenem localhost, nur die eigenen Prozesse.', 'Own files, own network with its own localhost, only its own processes.')],
-  [e('cgroups: Der Kernel setzt ihm Grenzen.', 'cgroups: the kernel sets it limits.'), e('Zum Beispiel höchstens ein CPU-Kern und 512 MB Arbeitsspeicher.', 'For example at most one CPU core and 512 MB of memory.')],
-  [e('Seine Dateien kommen aus dem Image.', 'Its files come from the image.'), e('Das Image wird sein Wurzelverzeichnis /, mehr Dateien sieht er nicht.', 'The image becomes its root directory /, it sees no other files.')],
-]
-export const Walls = ({ step }: { step: number }) => (
-  <div className="dg-col">
-    <Svg w={1000} h={424} label={`${t(why[step][0])} ${t(why[step][1])}`}>
-      <g key={step} className="tr-in">
-        <Say x={0} y={24} size={22}>{why[step][0]}</Say>
-        <Say x={0} y={54} size={17} w={500} fill="var(--ink-2)">{why[step][1]}</Say>
-      </g>
-      <rect x={0} y={84} width={1000} height={336} rx={16} fill="var(--c-host)" stroke="#c3cddb" strokeWidth={1.5} />
-      <Say x={16} y={107} size={14} fill="var(--ink-2)">{e('Dein Rechner · Linux', 'Your machine · Linux')}</Say>
-      <Fade on={step >= 1}><B x={40} y={240} w={280} h={34} t="reg" label={e('sieht den ganzen Rechner', 'sees the whole machine')} size={13.5} /></Fade>
-      <B x={40} y={290} w={280} h={46} t="app" label="java -jar app.jar" size={15} mono />
-      <path d="M180 336 V358" stroke="var(--ink-3)" strokeWidth={2} />
-      <rect className="tr" x={400} y={116} width={560} height={234} rx={16} fill="#fff" stroke="var(--blue)" strokeWidth={2.5} strokeDasharray="8 5" style={{ opacity: step >= 1 ? 1 : 0 }} />
-      <Fade on={step >= 1}>
-        <Say x={416} y={140} size={14} fill="var(--blue-deep)">Container backend</Say>
-        {[e('Dateien: nur /', 'Files: only /'), e('Netz: eigene IP', 'Network: own IP'), e('Prozesse: nur PID 1', 'Processes: only PID 1')].map((l, k) => <B key={k} x={416 + k * 180} y={150} w={170} h={30} t="libs" label={l} size={12.5} />)}
-        <Say x={416} y={198} size={12} fill="var(--blue)" caps>{e('Namespaces · eigene Sicht', 'Namespaces · own view')}</Say>
-      </Fade>
-      <Fade on={step >= 2}>
-        {([[e('CPU ≤ 1 Kern', 'CPU ≤ 1 core'), 0.25], [e('RAM ≤ 512 MB', 'RAM ≤ 512 MB'), 0.4]] as const).map(([l, f], k) => (
-          <g key={k}>
-            <Say x={416 + k * 280} y={222} size={13}>{l}</Say>
-            <rect x={416 + k * 280} y={230} width={250} height={10} rx={5} fill="#e3e8f0" />
-            <rect x={418 + k * 280} y={232} width={250 * f - 4} height={6} rx={3} fill="var(--blue)" />
-          </g>
-        ))}
-        <Say x={416} y={258} size={12} fill="var(--blue)" caps>{e('cgroups · eigene Grenzen', 'cgroups · own limits')}</Say>
-      </Fade>
-      <Fade on={step >= 3}>
-        {['app.jar', 'JDK 21', e('Linux-Basis', 'Linux base')].map((l, k) => <B key={k} x={416} y={272 + k * 24} w={130} h={20} t="libs" label={l} size={11} />)}
-      </Fade>
-      <B x={560} y={290} w={280} h={46} t="app" label="java -jar app.jar" size={15} mono />
-      <path d="M700 350 V358" stroke="var(--ink-3)" strokeWidth={2} />
-      <B x={16} y={360} w={968} h={48} t="kernel" label="Linux-Kernel" sub={step === 0 ? e('führt beide als ganz normale Prozesse aus', 'runs both as perfectly normal processes') : e('Namespaces und cgroups sind Funktionen des Kernels', 'namespaces and cgroups are features of the kernel')} size={15} />
-    </Svg>
-    <Take i={1} label={e('Merke', 'Remember')} text={e('Ein Container ist ein normaler Prozess, den der Linux-Kernel abschottet: Namespaces bestimmen, was er sieht, cgroups, wie viel er verbraucht, und das Image liefert seine Dateien.', 'A container is a normal process that the Linux kernel walls in: namespaces decide what it sees, cgroups how much it may use, and the image supplies its files.')} />
-  </div>
 )
 
 /* ── When Docker fits: situations with a verdict, like a decision table ── */
